@@ -1,5 +1,6 @@
 import random
 
+
 class RubiksCube:
     def __init__(self):
         self.cube = {}
@@ -88,8 +89,7 @@ class RubiksCube:
             direction = random.choice(directions)
             self.rotate(face, direction)
 
+
 if __name__ == "__main__":
     r = RubiksCube()
-    print(r)
     r.scramble()
-    print(r)
