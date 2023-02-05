@@ -24,4 +24,3 @@ class DqnAgent:
         loss = 0
 
         return loss
-

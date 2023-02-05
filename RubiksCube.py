@@ -6,6 +6,7 @@ class RubiksCube:
         self.cube = {}
         self.faces = ["front", "right", "up", "bottom", "left", "down"]
         self.colors = ["G", "R", "W", "B", "O", "Y"]
+        self.directions = ["clockwise", "counterclockwise"]
 
         for i in range(6):
             self.cube[self.faces[i]] = [[self.colors[i] for _ in range(3)] for _ in range(3)]
@@ -82,17 +83,42 @@ class RubiksCube:
             self.rotate_columns(affected_cubes, position)
 
     def scramble(self):
-        directions = ["clockwise", "counterclockwise"]
-
         for _ in range(100):
             face = random.choice(self.faces)
-            direction = random.choice(directions)
+            direction = random.choice(self.directions)
             self.rotate(face, direction)
 
 
     def reset(self):
         self.__init__()
 
+    def get_cube_state(self):
+        return list(self.cube.values())
+
+    def get_reward_state(self, state):
+        reward = 0
+        for face in state:
+            face = [x for y in face for x in y]  # Flatten list
+            reward += max([face.count(x) for x in self.colors])  # Get max count of each color
+
+        return reward
+
+    def check_solved(self):
+        return self.get_reward_state(self.get_cube_state()) == 54
+
+    def step(self, action):
+        action_face = self.faces[action[0]]
+        action_direction = self.directions[action[1]]
+
+        self.rotate(action[0], action[1])
+
+        state = self.get_cube_state()
+        reward = self.get_reward_state(state)
+        done = self.check_solved()
+
+        return state, reward, done
+
 if __name__ == "__main__":
-    r = RubiksCube()
-    print(r)
+    rb = RubiksCube()
+    rb.scramble()
+    print(rb)
