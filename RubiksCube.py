@@ -13,7 +13,7 @@ class RubiksCube:
     def __str__(self):
         return str(self.cube)
 
-    def rotateRows(self, affected_cubes, position):
+    def rotate_rows(self, affected_cubes, position):
         """
         Rotate the rows of the cubes given
         :param affected_cubes: The cubes to rotate
@@ -29,7 +29,7 @@ class RubiksCube:
             else:
                 self.cube[cube_name][position] = self.cube[affected_cubes[ind + 1]][position]
 
-    def rotateColumns(self, affected_cubes, position):
+    def rotate_columns(self, affected_cubes, position):
         """
         Rotate the columns of the cubes given
         :param affected_cubes: The cubes to rotate
@@ -56,30 +56,30 @@ class RubiksCube:
         """
 
         if face == "front":
-            self.rotateFace(["right", "up", "left", "down"], direction, 0, "rows")
+            self.rotate_face(["right", "up", "left", "down"], direction, 0, "rows")
         elif face == "right":
-            self.rotateFace(["front", "down", "bottom", "up"], direction, 2, "columns")
+            self.rotate_face(["front", "down", "bottom", "up"], direction, 2, "columns")
         elif face == "up":
-            self.rotateFace(["front", "right", "bottom", "left"], direction, 0, "columns")
+            self.rotate_face(["front", "right", "bottom", "left"], direction, 0, "columns")
         elif face == "bottom":
-            self.rotateFace(["up", "right", "down", "left"], direction, 2, "rows")
+            self.rotate_face(["up", "right", "down", "left"], direction, 2, "rows")
         elif face == "left":
-            self.rotateFace(["front", "up", "bottom", "down"], direction, 0, "columns")
+            self.rotate_face(["front", "up", "bottom", "down"], direction, 0, "columns")
         elif face == "down":
-            self.rotateFace(["front", "left", "bottom", "right"], direction, 2, "columns")
+            self.rotate_face(["front", "left", "bottom", "right"], direction, 2, "columns")
         else:
             raise Exception("Invalid face name given")
 
         return self.cube
 
-    def rotateFace(self, affected_cubes, direction, position, rotation):
+    def rotate_face(self, affected_cubes, direction, position, rotation):
         if direction == "counterclockwise":
             affected_cubes = affected_cubes[::-1]  # Reverse list
 
         if rotation == "rows":
-            self.rotateRows(affected_cubes, position)
+            self.rotate_rows(affected_cubes, position)
         else:
-            self.rotateColumns(affected_cubes, position)
+            self.rotate_columns(affected_cubes, position)
 
     def scramble(self):
         directions = ["clockwise", "counterclockwise"]
@@ -90,6 +90,9 @@ class RubiksCube:
             self.rotate(face, direction)
 
 
+    def reset(self):
+        self.__init__()
+
 if __name__ == "__main__":
     r = RubiksCube()
-    r.scramble()
+    print(r)

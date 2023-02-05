@@ -1,15 +1,19 @@
+import random
+
 class ReplayBuffer:
-    def store_gameplay_experience(self, state, next_state, reward, action, done):
+    def __init__(self):
+        self.buffer = []
+
+    def add_gameplay(self, state, next_state, reward, action, done):
         """
         Stores a step of gameplay experience in
         the buffer for later training
         """
-        return
+        self.buffer.append((state, next_state, reward, action, done))
 
-    def sample_gameplay_batch(self):
+    def sample_gameplay_batch(self, batch_size):
         """
         Samples a batch of gameplay experiences
         for training purposes.
         """
-        batch = []  # Put an empty list as placeholder
-        return batch
+        return random.sample(self.buffer, batch_size)
