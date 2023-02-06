@@ -1,6 +1,7 @@
 from keras import Sequential
 from keras.layers import *
 
+
 class NN:
     def __init__(self):
         self.model = Sequential()

@@ -1,6 +1,8 @@
 import NeuralNet as nn
 import ReplayBuffer as rb
 
+import math
+
 class DqnAgent:
     """
       DQN Agent: Train using the DQN algorithm
@@ -15,12 +17,17 @@ class DqnAgent:
         Takes a state from the Rubik's cube and returns
         an action that should be taken.
         """
-        return self.nn.predict(state)
+        prediction = self.nn.predict(state)
+        face = math.floor(max(prediction[0:5]))  # Get face with the highest reward
+        direction = prediction[-1]
+
+        return face, direction
 
     def train(self, batch):
         """
         Trains the agent on a batch of data from the replay buffer.
         """
-        loss = 0
+        x = batch["state"]
+        y = batch["action"]
 
-        return loss
+        self.nn.train(x, y)

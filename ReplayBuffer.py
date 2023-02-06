@@ -9,7 +9,7 @@ class ReplayBuffer:
         Stores a step of gameplay experience in
         the buffer for later training
         """
-        self.buffer.append((state, next_state, reward, action, done))
+        self.buffer.append({"state": state, "next_state": next_state, "reward": reward, "action": action, "done": done})
 
     def sample_gameplay_batch(self, batch_size):
         """
