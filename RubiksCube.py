@@ -108,7 +108,7 @@ class RubiksCube:
         """
         first_state = self.get_cube_state()  # Store first state to calculate reward later
         action_face = self.faces[action[0]]  # Get face name from action
-        action_direction = self.directions[action[1]]  # Get direction name from action
+        action_direction = action[1]  # Get direction name from action
 
         self.rotate(action_face, action_direction)
 
