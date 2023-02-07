@@ -5,7 +5,7 @@ class RubiksCube:
     def __init__(self):
         self.cube = {}
         self.faces = ["front", "right", "up", "bottom", "left", "down"]
-        self.colors = ["G", "R", "W", "B", "O", "Y"]
+        self.colors = [0,1,2,3,4,5,6]
         self.directions = ["clockwise", "counterclockwise"]
 
         for i in range(6):
@@ -87,9 +87,6 @@ class RubiksCube:
             face = random.choice(self.faces)
             direction = random.choice(self.directions)
             self.rotate(face, direction)
-
-    def reset(self):
-        self.__init__()
 
     def get_cube_state(self):
         return list(self.cube.values())
