@@ -50,8 +50,20 @@ class DqnAgent:
         """
         Trains the agent on a batch of data from the replay buffer.
         """
-        x = batch["state"]
-        y = batch["action"]
+        x = [b["state"] for b in batch]
+
+        for b in batch:
+            action = b["action"]
+            temp = [0, 0, 0, 0, 0, 0, 0]
+
+            temp[action[0]] = 1  # Set face index to 1
+            temp[-1] = 1 if action[1] == "clockwise" else 0  # Set direction to 1 if clockwise, 0 if counterclockwise
+
+            batch[batch.index(b)]["action"] = temp
+
+        y = [b["action"] for b in batch]
+
+        print(x, y)
 
         self.model.fit(x, y, epochs=epochs, batch_size=batch_size)
         self.model.save('model.h5')

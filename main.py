@@ -8,9 +8,9 @@ def train_model():
     agent = da.DqnAgent()
     buffer = rb.ReplayBuffer()
 
-    for i in range(200):
+    for i in range(2):
         get_train_data(cube, agent, buffer)
-        batch = buffer.sample_gameplay_batch(32)
+        batch = buffer.sample_gameplay_batch(3)
         loss = agent.train(batch)
         print("Loss: ", loss)
 
