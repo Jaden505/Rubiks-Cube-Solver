@@ -4,6 +4,7 @@ from numpy import array
 
 from keras import Sequential
 from keras.layers import *
+from keras.models import clone_model
 
 
 class DqnAgent:
@@ -13,10 +14,18 @@ class DqnAgent:
       """
     def __init__(self):
         self.replay_buffer = rb.ReplayBuffer()
+
         self.model = Sequential()
         self.create_model()
 
-    def policy(self, state):
+        self.target_model = clone_model(self.model)
+        self.update_target_model()
+
+        self.batch_size = 32
+        self.gamma = 0.95   # discount rate
+        self.learning_rate = 0.001
+
+    def policy(self, state, train=True):
         """
         Takes a state from the Rubik's cube and returns
         an action that should be taken.
@@ -24,10 +33,12 @@ class DqnAgent:
         state = array([state])  # Add batch dimension
         prediction = self.model.predict(state).tolist()[0]
 
-        face_index = prediction.index(max(prediction[0:5]))  # Get face with the highest probability
-        direction = "clockwise" if prediction[6] > 0.5 else "counterclockwise"  # Get direction with the highest probability
+        if not train:  # If used for parameters to turn cube (not training)
+            face_index = prediction.index(max(prediction[0:5]))  # Get face with the highest probability
+            direction = "clockwise" if prediction[6] > 0.5 else "counterclockwise"  # Get direction with the highest probability
+            return face_index, direction
 
-        return face_index, direction
+        return prediction
 
     def create_model(self):
         """
@@ -45,28 +56,26 @@ class DqnAgent:
         self.model.add(Dense(7, activation='softmax'))
         self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    def train(self, batch, epochs=100, batch_size=90):
+    def train(self, batch):
         """
         Trains the agent on a batch of data from the replay buffer.
         """
-        batch.sort(key=lambda b: b["reward"], reverse=True)  # Sort by reward
-        # batch = batch[:int(len(batch) * 0.2)]  # Keep only the top 20% of the batch
+        for (state, next_state, reward, action, done) in batch:
+            target_prediction = self.target_model.predict(array([state])).tolist()[0]
+            future_target_prediction = self.target_model.predict(array([next_state])).tolist()[0]
 
-        print([b["reward"] for b in batch])
+            empty_prediction = [0, 0, 0, 0, 0, 0, 0]
+            empty_prediction[-1] = 1 if action[1] == "clockwise" else 0
 
-        x = [b["state"] for b in batch]
+            future_reward = self.gamma * (max(future_target_prediction[:-1]) * 54)
 
-        y = []
-        for b in batch:
-            action = b["action"]
-            temp = [0, 0, 0, 0, 0, 0, 0]
+            if done:
+                empty_prediction[target_prediction[0]] = reward + future_reward
 
-            temp[action[0]] = 1  # Set face index to 1
-            temp[-1] = 1 if action[1] == "clockwise" else 0  # Set direction to 1 if clockwise, 0 if counterclockwise
+            self.model.fit(state, empty_prediction, epochs=1, batch_size=self.batch_size)
 
-            y.append(temp)
-
-        hist = self.model.fit(x, y, epochs=epochs, batch_size=batch_size)
-        # self.model.save('model.h5')
-
-        return hist.history['loss'][-1]
+    def update_target_model(self):
+        """
+        Updates the target model with the current model's weights
+        """
+        self.target_model.set_weights(self.model.get_weights())

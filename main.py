@@ -10,26 +10,30 @@ class Main:
         self.agent = da.DqnAgent()
         self.buffer = rb.ReplayBuffer()
 
-        self.BATCH_SIZE = 350
-        self.EPOCHS = 100
-        self.DATA_SIZE = 400
+        self.STEPS = 100
+        self.DATA_SIZE = 200
 
     def train_model(self):
-        for i in range(self.EPOCHS):
+        for i in range(self.STEPS):
             self.get_train_data(i)
-            batch = self.buffer.sample_gameplay_batch(350)
-            loss = self.agent.train(batch)
-            print("Loss: ", loss)
+
+            batch = self.buffer.sample_gameplay_batch(int(self.DATA_SIZE * 0.4))
+            self.agent.train(batch)
+
+            if i % 5 == 0:
+                self.agent.update_target_model()
+
+        self.agent.model.save("model.h5")
 
 
-    def get_train_data(self, epoch):
+    def get_train_data(self, step):
         self.cube.scramble()
         state = self.cube.get_cube_state()
 
         for i in range(self.DATA_SIZE):
-            action = self.agent.policy(state)
+            action = self.agent.policy(state, train=False)
 
-            if epoch == 0:
+            if step < 10:
                 action = random.randint(0, 6), "clockwise" if random.random() < 0.5 else "counterclockwise"
 
             next_state, reward, done = self.cube.step(action)

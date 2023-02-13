@@ -1,6 +1,5 @@
 import random
 
-
 class ReplayBuffer:
     def __init__(self):
         self.buffer = []
@@ -12,9 +11,11 @@ class ReplayBuffer:
         """
         self.buffer.append({"state": state, "next_state": next_state, "reward": reward, "action": action, "done": done})
 
-    def sample_gameplay_batch(self, batch_size):
+    def sample_gameplay_batch(self, size):
         """
         Samples a batch of gameplay experiences
         for training purposes.
         """
-        return random.sample(self.buffer, batch_size)
+        return random.sample(self.buffer, min(len(self.buffer), size))
+
+
