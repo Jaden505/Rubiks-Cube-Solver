@@ -1,3 +1,4 @@
+import copy
 import random
 
 
@@ -106,7 +107,7 @@ class RubiksCube:
         """
         Rotate the cube and return the next state, reward and if the cube is solved
         """
-        first_state = self.get_cube_state()  # Store first state to calculate reward later
+        first_state = copy.deepcopy(self.get_cube_state())  # Store first state to calculate reward later
         action_face = self.faces[action[0]]  # Get face name from action
         action_direction = action[1]  # Get direction name from action
 
@@ -121,7 +122,7 @@ class RubiksCube:
     def get_reward_action(self, state, next_state):
         return self.get_reward_state(next_state) - self.get_reward_state(state)
 
+
 if __name__ == "__main__":
     rb = RubiksCube()
     rb.scramble()
-    print(rb)
