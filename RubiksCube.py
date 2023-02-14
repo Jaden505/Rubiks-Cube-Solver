@@ -6,7 +6,7 @@ class RubiksCube:
     def __init__(self):
         self.cube = {}
         self.faces = ["front", "right", "up", "bottom", "left", "down"]
-        self.colors = [0,1,2,3,4,5,6]
+        self.colors = [1,2,3,4,5,6]
         self.directions = ["clockwise", "counterclockwise"]
 
         for i in range(6):
@@ -126,3 +126,4 @@ class RubiksCube:
 if __name__ == "__main__":
     rb = RubiksCube()
     rb.scramble()
+    print(rb)

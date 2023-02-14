@@ -16,6 +16,7 @@ class ReplayBuffer:
         Samples a batch of gameplay experiences
         for training purposes.
         """
-        return random.sample(self.buffer, min(len(self.buffer), size))
+        sample = random.sample(self.buffer, min(len(self.buffer), size))
+        return [(data["state"], data["next_state"], data["reward"], data["action"], data["done"]) for data in sample]
 
 

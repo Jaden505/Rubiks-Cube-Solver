@@ -1,6 +1,7 @@
 import ReplayBuffer as rb
 
-from numpy import array
+from numpy import array, random
+from random import random as rand_int
 
 from keras import Sequential
 from keras.layers import *
@@ -23,15 +24,22 @@ class DqnAgent:
 
         self.batch_size = 32
         self.gamma = 0.95   # discount rate
-        self.learning_rate = 0.001
+        self.epsilon = 1.0  # exploration rate
+        self.epsilon_min = 0.01
+        self.epsilon_decay = 0.995
 
-    def policy(self, state, train=True):
+    def policy(self, state, model, train=True):
         """
         Takes a state from the Rubik's cube and returns
         an action that should be taken.
         """
-        state = array([state])  # Add batch dimension
-        prediction = self.model.predict(state).tolist()[0]
+        random_action = random.uniform(0, 1) < self.epsilon
+        if random_action:
+            return self.epsilon_greedy_policy(train)
+
+        normalised = [[[node / 6 for node in row] for row in face] for face in state]
+        state = array([normalised])  # Add batch dimension
+        prediction = model.predict(state).tolist()[0]
 
         if not train:  # If used for parameters to turn cube (not training)
             face_index = prediction.index(max(prediction[0:5]))  # Get face with the highest probability
@@ -39,6 +47,20 @@ class DqnAgent:
             return face_index, direction
 
         return prediction
+
+    def epsilon_greedy_policy(self, train):
+        """
+        Epsilon greedy policy for exploration
+        """
+        if not train:
+            face_index = random.randint(0, 5)
+            direction = "clockwise" if random.random() < 0.5 else "counterclockwise"
+            return face_index, direction
+
+        else:
+            empty_prediction = [0, 0, 0, 0, 0, 0, 0]
+            empty_prediction[random.randint(0, 6)] = rand_int()
+            return empty_prediction
 
     def create_model(self):
         """
@@ -49,8 +71,6 @@ class DqnAgent:
         """
         self.model.add(InputLayer(input_shape=(6, 3, 3)))
         self.model.add(Flatten())
-        self.model.add(Dense(256, activation='relu'))
-        self.model.add(Dense(128, activation='relu'))
         self.model.add(Dense(64, activation='relu'))
         self.model.add(Dense(32, activation='relu'))
         self.model.add(Dense(7, activation='softmax'))
@@ -61,18 +81,24 @@ class DqnAgent:
         Trains the agent on a batch of data from the replay buffer.
         """
         for (state, next_state, reward, action, done) in batch:
-            target_prediction = self.target_model.predict(array([state])).tolist()[0]
-            future_target_prediction = self.target_model.predict(array([next_state])).tolist()[0]
+            target_prediction = self.policy(state, self.target_model, False)
+            future_target_prediction = self.policy(next_state, self.target_model)
 
             empty_prediction = [0, 0, 0, 0, 0, 0, 0]
-            empty_prediction[-1] = 1 if action[1] == "clockwise" else 0
-
-            future_reward = self.gamma * (max(future_target_prediction[:-1]) * 54)
 
             if done:
-                empty_prediction[target_prediction[0]] = reward + future_reward
+                empty_prediction[-1] = 1 if action[1] == "clockwise" else 0
+                empty_prediction[target_prediction[0]] = 1
+            else:
+                future_reward = self.gamma * (max(future_target_prediction[:-1]) * 54)
+                empty_prediction[-1] = (reward + future_reward) / 105
+                empty_prediction[target_prediction[0]] = (reward + future_reward) / 105  # Normalize
 
-            self.model.fit(state, empty_prediction, epochs=1, batch_size=self.batch_size)
+            self.model.fit(x=[state], y=[empty_prediction], epochs=1, verbose=1)
+            self.update_target_model()
+
+            # Decrease epsilon over time
+            self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
     def update_target_model(self):
         """
