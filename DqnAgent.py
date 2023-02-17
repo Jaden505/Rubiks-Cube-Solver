@@ -26,7 +26,7 @@ class DqnAgent:
         self.gamma = 0.95   # discount rate
         self.epsilon = 1.0  # exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.99
 
     def policy(self, state, model, train=True):
         """
@@ -71,34 +71,41 @@ class DqnAgent:
         """
         self.model.add(InputLayer(input_shape=(6, 3, 3)))
         self.model.add(Flatten())
-        self.model.add(Dense(64, activation='relu'))
-        self.model.add(Dense(32, activation='relu'))
+        self.model.add(Dense(64, activation='elu'))
+        self.model.add(Dense(32, activation='elu'))
         self.model.add(Dense(7, activation='softmax'))
-        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mse'])
 
     def train(self, batch):
         """
         Trains the agent on a batch of data from the replay buffer.
         """
-        for (state, next_state, reward, action, done) in batch:
+        x, y = [], []
+
+        for index, row in batch:
+            state, next_state, reward, action, done = row["state"], row["next_state"], row["reward"], row["action"], row["done"]
+
             target_prediction = self.policy(state, self.target_model, False)
             future_target_prediction = self.policy(next_state, self.target_model)
 
             empty_prediction = [0, 0, 0, 0, 0, 0, 0]
+            empty_prediction[-1] = 1 if action[1] == "clockwise" else 0
 
             if done:
-                empty_prediction[-1] = 1 if action[1] == "clockwise" else 0
                 empty_prediction[target_prediction[0]] = 1
             else:
                 future_reward = self.gamma * (max(future_target_prediction[:-1]) * 54)
-                empty_prediction[-1] = (reward + future_reward) / 105
                 empty_prediction[target_prediction[0]] = (reward + future_reward) / 105  # Normalize
 
-            self.model.fit(x=[state], y=[empty_prediction], epochs=1, verbose=1)
+            x.append(state)
+            y.append(empty_prediction)
+
             self.update_target_model()
 
-            # Decrease epsilon over time
-            self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+        self.model.fit(x=x, y=y, epochs=1, batch_size=self.batch_size, verbose=1)
+
+        # Decrease epsilon over time
+        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
     def update_target_model(self):
         """

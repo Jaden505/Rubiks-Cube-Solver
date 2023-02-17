@@ -1,22 +1,38 @@
-import random
+import pandas as pd
+
 
 class ReplayBuffer:
     def __init__(self):
-        self.buffer = []
+        self.df = pd.DataFrame(columns=["state", "next_state", "reward", "action", "done"])
+        self.df['done'] = self.df['done'].astype('bool')
+
+        self.filename = "replay_buffer.csv"
 
     def add_gameplay(self, state, next_state, reward, action, done):
         """
         Stores a step of gameplay experience in
         the buffer for later training
         """
-        self.buffer.append({"state": state, "next_state": next_state, "reward": reward, "action": action, "done": done})
+        row = {"state": state, "next_state": next_state, "reward": reward, "action": action, "done": done}
+        self.df = pd.concat([self.df, pd.DataFrame.from_records([row])])
 
     def sample_gameplay_batch(self, size):
         """
         Samples a batch of gameplay experiences
         for training purposes.
         """
-        sample = random.sample(self.buffer, min(len(self.buffer), size))
-        return [(data["state"], data["next_state"], data["reward"], data["action"], data["done"]) for data in sample]
+        return self.df.sample(min(self.df.size, size), random_state=42, replace=False).iterrows()
 
+    def save(self):
+        """
+        Saves the replay buffer to a csv file
+        """
+        df = pd.DataFrame(self.df)
+        df.to_csv(self.filename)
 
+    def load(self):
+        """
+        Loads the replay buffer from a csv file
+        """
+        self.df = pd.read_csv(self.filename)
+        return self.df
