@@ -1,10 +1,12 @@
 import pandas as pd
-
+import ast
 
 class ReplayBuffer:
     def __init__(self):
         self.df = pd.DataFrame(columns=["state", "next_state", "reward", "action", "done"])
-        self.df['done'] = self.df['done'].astype('bool')
+
+        # Cast columns
+        self.df['done'] = self.df['done'].astype('bool').tolist()
 
         self.filename = "replay_buffer.csv"
 
@@ -35,4 +37,9 @@ class ReplayBuffer:
         Loads the replay buffer from a csv file
         """
         self.df = pd.read_csv(self.filename)
+
+        # Cast columns
+        self.df['state'] = self.df['state'].map(ast.literal_eval)
+        self.df['next_state'] = self.df['next_state'].map(ast.literal_eval)
+
         return self.df

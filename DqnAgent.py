@@ -83,24 +83,23 @@ class DqnAgent:
         x, y = [], []
 
         for index, row in batch:
-            state, next_state, reward, action, done = row["state"], row["next_state"], row["reward"], row["action"], row["done"]
-
-            target_prediction = self.policy(state, self.target_model, False)
-            future_target_prediction = self.policy(next_state, self.target_model)
+            target_prediction = self.policy(row["state"], self.target_model, False)
+            future_target_prediction = self.policy(row["next_state"], self.target_model)
 
             empty_prediction = [0, 0, 0, 0, 0, 0, 0]
-            empty_prediction[-1] = 1 if action[1] == "clockwise" else 0
+            empty_prediction[-1] = 1 if row["action"][1] == "clockwise" else 0
 
-            if done:
+            if row["done"]:
                 empty_prediction[target_prediction[0]] = 1
             else:
                 future_reward = self.gamma * (max(future_target_prediction[:-1]) * 54)
-                empty_prediction[target_prediction[0]] = (reward + future_reward) / 105  # Normalize
+                empty_prediction[target_prediction[0]] = (row["reward"] + future_reward) / 105  # Normalize
 
-            x.append(state)
+            x.append(row["state"])
             y.append(empty_prediction)
 
             self.update_target_model()
+
 
         self.model.fit(x=x, y=y, epochs=1, batch_size=self.batch_size, verbose=1)
 
