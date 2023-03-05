@@ -23,7 +23,7 @@ class ReplayBuffer:
         Samples a batch of gameplay experiences
         for training purposes.
         """
-        return self.df.sample(min(self.df.size, size), random_state=42, replace=False).iterrows()
+        return self.df.sample(min(self.df.size, size), random_state=42, replace=False)
 
     def save(self):
         """

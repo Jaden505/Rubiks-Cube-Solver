@@ -2,8 +2,6 @@ import RubiksCube as rc
 import DqnAgent as da
 import ReplayBuffer as rb
 
-from keras.models import load_model
-
 class Main:
     def __init__(self):
         self.cube = rc.RubiksCube()
@@ -25,17 +23,16 @@ class Main:
     def get_train_data(self):
         self.cube.scramble()
         state = self.cube.get_cube_state()
-        done = False
 
-        while not done:
-            action = self.agent.policy(state, model, train=False)
+        for i in range(self.DATA_SIZE):
+            action = self.agent.policy(state, self.agent.target_model, train=False)
 
             next_state, reward, done = self.cube.step(action)
 
             print("Action: ", action)
-            print("Reward: ", self.cube.get_reward_state(state))
+            print("Reward: ", reward)
 
-            # self.buffer.add_gameplay(state, next_state, reward, action, done)
+            self.buffer.add_gameplay(state, next_state, reward, action, done)
             state = next_state
 
             if done:
@@ -46,6 +43,5 @@ class Main:
 
 
 if __name__ == "__main__":
-    model = load_model("model.h5")
     m = Main()
-    m.get_train_data()
+    m.train_model()

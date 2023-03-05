@@ -1,6 +1,6 @@
 import ReplayBuffer as rb
 
-from numpy import array, random
+from numpy import array, random, copy, amax
 from random import random as rand_int
 
 from keras import Sequential
@@ -23,10 +23,8 @@ class DqnAgent:
         self.update_target_model()
 
         self.batch_size = 32
-        self.gamma = 0.95   # discount rate
+        self.discount = 0.95   # discount rate
         self.epsilon = 1.0  # exploration rate
-        self.epsilon_min = 0.01
-        self.epsilon_decay = 0.99
 
     def policy(self, state, model, train=True):
         """
@@ -51,6 +49,7 @@ class DqnAgent:
     def epsilon_greedy_policy(self, train):
         """
         Epsilon greedy policy for exploration
+        return random action based formatted on training data or test data based on parameter
         """
         if not train:
             face_index = random.randint(0, 5)
@@ -77,34 +76,21 @@ class DqnAgent:
         self.model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mse'])
 
     def train(self, batch):
-        """
-        Trains the agent on a batch of data from the replay buffer.
-        """
-        x, y = [], []
+        state_batch, next_state_batch, action_batch, reward_batch, done_batch = list(batch.values())
 
-        for index, row in batch:
-            target_prediction = self.policy(row["state"], self.target_model, False)
-            future_target_prediction = self.policy(row["next_state"], self.target_model)
+        current_q = self.model.get_qvalues(state_batch, action_batch)
+        target_q = copy(current_q)
+        next_q = self.target_model.get_qvalues(next_state_batch)
 
-            empty_prediction = [0, 0, 0, 0, 0, 0, 0]
-            empty_prediction[-1] = 1 if row["action"][1] == "clockwise" else 0
+        max_next_q = amax(next_q, axis=1)
+        for i in range(state_batch.shape[0]):
+            # If state of cube is solved set target q-value reward otherwise add maximum q-value
+            target_q[i][action_batch[i]] = reward_batch[i] if done_batch[i] \
+                else reward_batch[i] + (self.discount * max_next_q[i])
 
-            if row["done"]:
-                empty_prediction[target_prediction[0]] = 1
-            else:
-                future_reward = self.gamma * (max(future_target_prediction[:-1]) * 54)
-                empty_prediction[target_prediction[0]] = (row["reward"] + future_reward) / 105  # Normalize
+        result = self.model.fit(x=state_batch, y=target_q)
 
-            x.append(row["state"])
-            y.append(empty_prediction)
-
-            self.update_target_model()
-
-
-        self.model.fit(x=x, y=y, epochs=1, batch_size=self.batch_size, verbose=1)
-
-        # Decrease epsilon over time
-        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+        return result.history['loss']
 
     def update_target_model(self):
         """
