@@ -10,12 +10,12 @@ class Main:
 
         self.buffer.load()
 
-        self.STEPS = 5
+        self.STEPS = 500
         self.DATA_SIZE = len(self.buffer.df)
 
     def train_model(self):
         for step in range(self.STEPS):
-            batch = self.buffer.sample_gameplay_batch(int(self.DATA_SIZE * 0.1))
+            batch = self.buffer.sample_gameplay_batch(int(self.DATA_SIZE * 0.8))
             self.agent.train(batch)
 
         self.agent.model.save("model.h5")

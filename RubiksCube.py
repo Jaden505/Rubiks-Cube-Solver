@@ -98,7 +98,7 @@ class RubiksCube:
             face = [x for y in face for x in y]  # Flatten list
             reward += max([face.count(x) for x in self.colors])  # Get max count of each color
 
-        return reward
+        return reward / 54  # normalize reward
 
     def check_solved(self):
         return self.get_reward_state(self.get_cube_state()) == 54

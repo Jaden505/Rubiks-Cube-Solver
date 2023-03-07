@@ -5,10 +5,10 @@ class ReplayBuffer:
     def __init__(self):
         self.df = pd.DataFrame(columns=["state", "next_state", "reward", "action", "done"])
 
-        # Cast columns
+        # Cast column type
         self.df['done'] = self.df['done'].astype('bool').tolist()
 
-        self.filename = "replay_buffer.csv"
+        self.FILENAME = "replay_buffer.csv"
 
     def add_gameplay(self, state, next_state, reward, action, done):
         """
@@ -23,20 +23,20 @@ class ReplayBuffer:
         Samples a batch of gameplay experiences
         for training purposes.
         """
-        return self.df.sample(min(self.df.size, size), random_state=42, replace=False)
+        return self.df.sample(min(self.df.size, size), random_state=42, replace=False).to_dict('list')
 
     def save(self):
         """
         Saves the replay buffer to a csv file
         """
         df = pd.DataFrame(self.df)
-        df.to_csv(self.filename)
+        df.to_csv(self.FILENAME)
 
     def load(self):
         """
         Loads the replay buffer from a csv file
         """
-        self.df = pd.read_csv(self.filename)
+        self.df = pd.read_csv(self.FILENAME)
 
         # Cast columns
         self.df['state'] = self.df['state'].map(ast.literal_eval)

@@ -72,23 +72,28 @@ class DqnAgent:
         self.model.add(Flatten())
         self.model.add(Dense(64, activation='elu'))
         self.model.add(Dense(32, activation='elu'))
-        self.model.add(Dense(7, activation='softmax'))
-        self.model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mse'])
+        self.model.add(Dense(7, activation='sigmoid'))
+        self.model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
     def train(self, batch):
-        state_batch, next_state_batch, action_batch, reward_batch, done_batch = list(batch.values())
+        state_batch, next_state_batch, reward_batch, action_batch, done_batch = list(batch.values())[1:]
+        state_batch, next_state_batch = array(state_batch), array(next_state_batch)  # Set as np arrays to get q-values
 
-        current_q = self.model.get_qvalues(state_batch, action_batch)
+        current_q = self.model(state_batch)  # Get q-values of state
         target_q = copy(current_q)
-        next_q = self.target_model.get_qvalues(next_state_batch)
-
+        next_q = self.target_model(next_state_batch)  # Get q-values of next state
         max_next_q = amax(next_q, axis=1)
+
         for i in range(state_batch.shape[0]):
-            # If state of cube is solved set target q-value reward otherwise add maximum q-value
-            target_q[i][action_batch[i]] = reward_batch[i] if done_batch[i] \
+            # If state of cube is solved set target q-value reward otherwise add maximum next state q-value
+            face = int(action_batch[i][1])
+            reward = reward_batch[i] if done_batch[i] \
                 else reward_batch[i] + (self.discount * max_next_q[i])
 
-        result = self.model.fit(x=state_batch, y=target_q)
+            target_q[i][face] = reward  # Reward rotation face
+            target_q[i][-1] = reward  # Reward rotation direction
+
+        result = self.model.fit(x=state_batch, y=target_q, epochs=40, batch_size=64)
 
         return result.history['loss']
 
