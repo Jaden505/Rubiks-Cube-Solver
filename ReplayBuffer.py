@@ -8,7 +8,7 @@ class ReplayBuffer:
         # Cast column type
         self.df['done'] = self.df['done'].astype('bool').tolist()
 
-        self.FILENAME = "replay_buffer.csv"
+        self.FILENAME = "replay_buffer_normalized_reward.csv"
 
     def add_gameplay(self, state, next_state, reward, action, done):
         """

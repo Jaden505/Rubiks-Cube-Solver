@@ -11,22 +11,23 @@ class Main:
         self.buffer.load()
 
         self.STEPS = 500
+        # self.DATA_SIZE = 5000
         self.DATA_SIZE = len(self.buffer.df)
 
     def train_model(self):
         for step in range(self.STEPS):
-            batch = self.buffer.sample_gameplay_batch(int(self.DATA_SIZE * 0.8))
+            batch = self.buffer.sample_gameplay_batch(int(self.DATA_SIZE))
             self.agent.train(batch)
 
         self.agent.model.save("model.h5")
 
     def get_train_data(self):
-        self.cube.scramble()
+        # self.cube.scramble()
         state = self.cube.get_cube_state()
 
         for i in range(self.DATA_SIZE):
-            action = self.agent.policy(state, self.agent.target_model, train=False)
-
+            # action = self.agent.policy(state, self.agent.target_model, train=False)
+            action = self.agent.epsilon_greedy_policy(False)
             next_state, reward, done = self.cube.step(action)
 
             print("Action: ", action)
@@ -45,3 +46,4 @@ class Main:
 if __name__ == "__main__":
     m = Main()
     m.train_model()
+    # m.get_train_data()

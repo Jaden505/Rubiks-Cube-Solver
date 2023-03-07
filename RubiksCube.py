@@ -114,7 +114,7 @@ class RubiksCube:
         self.rotate(action_face, action_direction)
 
         next_state = self.get_cube_state()
-        reward = self.get_reward_action(first_state, next_state)
+        reward = self.get_reward_state(self.get_cube_state())
         done = self.check_solved()
 
         return next_state, reward, done

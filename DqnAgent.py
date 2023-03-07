@@ -6,6 +6,7 @@ from random import random as rand_int
 from keras import Sequential
 from keras.layers import *
 from keras.models import clone_model
+from keras.metrics import AUC
 
 
 class DqnAgent:
@@ -70,10 +71,10 @@ class DqnAgent:
         """
         self.model.add(InputLayer(input_shape=(6, 3, 3)))
         self.model.add(Flatten())
-        self.model.add(Dense(64, activation='elu'))
-        self.model.add(Dense(32, activation='elu'))
+        self.model.add(Dense(64, activation='relu'))
+        self.model.add(Dense(32, activation='relu'))
         self.model.add(Dense(7, activation='sigmoid'))
-        self.model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     def train(self, batch):
         state_batch, next_state_batch, reward_batch, action_batch, done_batch = list(batch.values())[1:]
@@ -93,7 +94,7 @@ class DqnAgent:
             target_q[i][face] = reward  # Reward rotation face
             target_q[i][-1] = reward  # Reward rotation direction
 
-        result = self.model.fit(x=state_batch, y=target_q, epochs=40, batch_size=64)
+        result = self.model.fit(x=state_batch, y=target_q)
 
         return result.history['loss']
 
