@@ -26,7 +26,6 @@ class Main:
         state = self.cube.get_cube_state()
 
         for i in range(self.DATA_SIZE):
-            # action = self.agent.policy(state, self.agent.target_model, train=False)
             action = self.agent.epsilon_greedy_policy(False)
             next_state, reward, done = self.cube.step(action)
 

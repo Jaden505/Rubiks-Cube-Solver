@@ -16,7 +16,7 @@ def try_solve():
 
 
     while not done:
-        action = da.policy(state, model, False)
+        action = da.policy(state, model)
         next_state, reward, done = cube.step(action)
 
         print("Reward: ", reward)
