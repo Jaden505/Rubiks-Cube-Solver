@@ -5,28 +5,31 @@ from solver import DqnAgent as da, ReplayBuffer as rb
 class Main:
     def __init__(self):
         self.cube = rc.RubiksCube()
+
         self.agent = da.DqnAgent()
         self.buffer = rb.ReplayBuffer()
 
         self.buffer.load()
 
-        self.STEPS = 20
-        # self.DATA_SIZE = 10000
-        self.DATA_SIZE = int(len(self.buffer.df) * 0.8)
+        self.STEPS = 30
+        self.DATA_SIZE = int(len(self.buffer.df) * 0.1)
 
     def train_model(self):
         for step in range(self.STEPS):
             batch = self.buffer.sample_gameplay_batch(self.DATA_SIZE)
             self.agent.train(batch)
 
-        self.agent.model.save("../models/model.h5")
+            if step % 3 == 0:
+                self.agent.update_target_model()
+
+        self.agent.model.save("models/model.h5")
 
     def get_train_data(self):
         # self.cube.scramble()
         state = self.cube.get_cube_state()
 
         for i in range(self.DATA_SIZE):
-            action = self.agent.epsilon_greedy_policy(False)
+            action = self.agent.random_action()
             next_state, reward, done = self.cube.step(action)
 
             print("Action: ", action)

@@ -1,5 +1,4 @@
 from keras.models import load_model
-from numpy import array
 
 from cube import RubiksCube as rc
 import DqnAgent
@@ -16,10 +15,12 @@ def try_solve():
 
 
     while not done:
-        action = da.policy(state, model)
-        next_state, reward, done = cube.step(action)
+        face_index, direction = da.policy(state, model)
+        next_state, reward, done = cube.step((face_index, direction))
 
+        print("Action: ", (face_index, direction))
         print("Reward: ", reward)
+        print("Progress: ", cube.get_reward_state(next_state))
 
         state = next_state
 

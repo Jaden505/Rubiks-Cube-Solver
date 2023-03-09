@@ -1,4 +1,3 @@
-import copy
 import random
 
 
@@ -6,7 +5,7 @@ class RubiksCube:
     def __init__(self):
         self.cube = {}
         self.faces = ["front", "right", "up", "bottom", "left", "down"]
-        self.colors = [1,2,3,4,5,6]
+        self.colors = [1, 2, 3, 4, 5, 6]
         self.directions = ["clockwise", "counterclockwise"]
 
         for i in range(6):
@@ -88,43 +87,6 @@ class RubiksCube:
             face = random.choice(self.faces)
             direction = random.choice(self.directions)
             self.rotate(face, direction)
-
-    def get_cube_state(self):
-        return list(self.cube.values())
-
-    def get_reward_state(self, state):
-        reward = 0
-        for face in state:
-            face = [x for y in face for x in y]  # Flatten list
-            reward += max([face.count(x) for x in self.colors])  # Get max count of each color
-
-        return reward / 54  # normalize reward
-
-    def check_solved(self):
-        return self.get_reward_state(self.get_cube_state()) == 54
-
-    def step(self, action):
-        """
-        Rotate the cube and return the next state, reward and if the cube is solved
-        """
-        first_state = copy.deepcopy(self.get_cube_state())  # Store first state to calculate reward later
-        action_face = self.faces[action[0]]  # Get face name from action
-        action_direction = action[1]  # Get direction name from action
-
-        self.rotate(action_face, action_direction)
-
-        next_state = self.get_cube_state()
-        reward = self.get_reward_action(first_state, next_state)
-        done = self.check_solved()
-
-        return next_state, reward, done
-
-    def get_reward_action(self, state, next_state):
-        max_action_reward = 12 / 54
-        improvement = self.get_reward_state(next_state) - self.get_reward_state(state)
-        improvement = 0 if improvement < 0 else improvement  # Set negatives to 0
-
-        return improvement / max_action_reward
 
 
 if __name__ == "__main__":
