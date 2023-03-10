@@ -13,7 +13,6 @@ def try_solve():
     state = cube.get_cube_state()
     done = False
 
-
     while not done:
         face_index, direction = da.policy(state, model)
         next_state, reward, done = cube.step((face_index, direction))

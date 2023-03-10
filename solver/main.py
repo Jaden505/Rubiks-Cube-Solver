@@ -12,7 +12,7 @@ class Main:
         self.buffer.load()
 
         self.STEPS = 30
-        self.DATA_SIZE = int(len(self.buffer.df) * 0.1)
+        self.DATA_SIZE = int(len(self.buffer.df) * 0.05)
 
     def train_model(self):
         for step in range(self.STEPS):
@@ -22,7 +22,7 @@ class Main:
             if step % 3 == 0:
                 self.agent.update_target_model()
 
-        self.agent.model.save("models/model.h5")
+        self.agent.model.save("../models/model.h5")
 
     def get_train_data(self):
         # self.cube.scramble()
