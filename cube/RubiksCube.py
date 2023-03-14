@@ -125,6 +125,10 @@ class RubiksCube:
 
         return improvement / max_action_reward
 
+    def reset(self):
+        self.__init__()
+        return self.get_cube_state()
+
 
 if __name__ == "__main__":
     rb = RubiksCube()

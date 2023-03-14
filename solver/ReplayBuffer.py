@@ -15,7 +15,7 @@ class ReplayBuffer:
         Stores a step of gameplay experience in
         the buffer for later training
         """
-        row = {"state": state, "next_state": next_state, "reward": reward, "action": action, "done": done}
+        row = {"state": str(state), "next_state": str(next_state), "reward": reward, "action": action, "done": done}
         self.df = pd.concat([self.df, pd.DataFrame.from_records([row])])
 
     def sample_gameplay_batch(self, size):
@@ -38,8 +38,9 @@ class ReplayBuffer:
         """
         self.df = pd.read_csv(self.FILENAME)
 
-        # Cast columns
+        # Cast columns to lists
         self.df['state'] = self.df['state'].map(ast.literal_eval)
         self.df['next_state'] = self.df['next_state'].map(ast.literal_eval)
+        self.df['action'] = self.df['action'].map(ast.literal_eval)
 
         return self.df

@@ -1,13 +1,14 @@
 import ReplayBuffer as rb
 
 from numpy import array, squeeze, copy, amax, random
-from keras.models import clone_model
+from random import random as rand
 
+from keras.models import clone_model
 from keras.models import Model
 from keras.layers import *
 
 
-class DqnAgent():
+class DqnAgent:
     """
       DQN Agent: Train using the DQN algorithm
       and will be receiving random states from the Rubik's cube
@@ -22,8 +23,7 @@ class DqnAgent():
         self.target_model = clone_model(self.model)
         self.update_target_model()
 
-        self.batch_size = 128
-        self.discount = 0.97  # discount rate
+        self.discount = 0.95  # discount rate
         self.epsilon = 1.0  # exploration rate
 
     def create_model(self):
@@ -36,7 +36,6 @@ class DqnAgent():
 
         # Define the model layers
         x = Flatten()(input_layer)
-        x = Dense(256, activation='elu')(x)
         x = Dense(128, activation='elu')(x)
         x = Dense(64, activation='elu')(x)
         x = Dense(32, activation='elu')(x)
@@ -49,12 +48,12 @@ class DqnAgent():
 
         # Define the loss function for each output
         losses = {
-            'face_output': 'categorical_crossentropy',
-            'direction_output': 'categorical_crossentropy'
+            'face_output': 'mean_squared_error',
+            'direction_output': 'mean_squared_error'
         }
 
         # Compile the model with the optimizer, loss function, and metrics
-        self.model.compile(optimizer='adam', loss=losses, metrics=['accuracy'])
+        self.model.compile(optimizer='adam', loss=losses, metrics=['mse'])
 
     @staticmethod
     def policy(state, model, for_cube=True):
@@ -96,8 +95,7 @@ class DqnAgent():
             face_target_q[i][face] = reward_face  # Reward rotation face
             direction_target_q[i][direction] = reward_direction  # Reward rotation direction
 
-        self.model.fit(x=state_batch, y=[face_target_q, direction_target_q], batch_size=self.batch_size, epochs=1,
-                       verbose=1)
+        self.model.fit(x=state_batch, y=[face_target_q, direction_target_q])
 
         self.epsilon *= self.discount
 
@@ -123,9 +121,9 @@ class DqnAgent():
         Epsilon greedy policy for exploration
         return random action based formatted on training data or test data based on parameter
         """
-        if random.uniform(0, 1) < self.epsilon:
+        if rand() < self.epsilon:
             face = random.randint(0, 5)
-            direction = random.randint(0, 1)
+            direction = round(rand())
             return face, direction
 
         return DqnAgent.policy(state, self.model, for_cube=False)
