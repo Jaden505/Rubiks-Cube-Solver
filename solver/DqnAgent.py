@@ -36,7 +36,6 @@ class DqnAgent:
 
         # Define the model layers
         x = Flatten()(input_layer)
-        x = Dense(128, activation='elu')(x)
         x = Dense(64, activation='elu')(x)
         x = Dense(32, activation='elu')(x)
 
@@ -48,18 +47,21 @@ class DqnAgent:
 
         # Define the loss function for each output
         losses = {
-            'face_output': 'mean_squared_error',
-            'direction_output': 'mean_squared_error'
+            'face_output': 'categorical_crossentropy',
+            'direction_output': 'categorical_crossentropy'
         }
 
         # Compile the model with the optimizer, loss function, and metrics
-        self.model.compile(optimizer='adam', loss=losses, metrics=['mse'])
+        self.model.compile(optimizer='adam', loss=losses, metrics=['accuracy'])
 
     @staticmethod
-    def policy(state, model, for_cube=True):
+    def policy(state, model):
         """
         Takes a state from the Rubik's cube and returns
         an action that should be taken.
+        @param state: The current state of the Rubik's cube
+        @param model: The model to use to predict the action
+        @return: The action to take
         """
         normalised = [[[node / 6 for node in row] for row in face] for face in state]
         state = array([normalised])  # Add batch dimension
@@ -68,9 +70,6 @@ class DqnAgent:
 
         face_index = face_prediction.index(max(face_prediction))
         direction = 1 if direction_prediction[0] > direction_prediction[1] else 0
-
-        if for_cube:  # If used for parameters to turn cube (not training)
-            direction = 'clockwise' if direction == 1 else 'counterclockwise'
 
         return face_index, direction
 
@@ -91,6 +90,10 @@ class DqnAgent:
 
             reward_direction = reward_batch[i] if done_batch[i] \
                 else reward_batch[i] + (self.discount * max_next_q_direction[i])
+
+            next_face = self.target_model.predict(array([state_batch[i]]))[0][0].tolist()
+            if next_face.index(max(next_face)) == face:
+                reward_face -= 1
 
             face_target_q[i][face] = reward_face  # Reward rotation face
             direction_target_q[i][direction] = reward_direction  # Reward rotation direction
@@ -126,4 +129,4 @@ class DqnAgent:
             direction = round(rand())
             return face, direction
 
-        return DqnAgent.policy(state, self.model, for_cube=False)
+        return DqnAgent.policy(state, self.target_model)

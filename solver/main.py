@@ -13,7 +13,7 @@ class Main:
 
         self.buffer.load()
 
-        self.STEPS = 50
+        self.STEPS = 30
         self.DATA_SIZE = 64
 
     def train_model(self):
@@ -49,7 +49,7 @@ class Main:
 
     def get_random_action(self):
         directions = ['clockwise', 'counterclockwise']
-        return (randint(0, 5), directions[randint(0, 1)])
+        return randint(0, 5), directions[randint(0, 1)]
 
 
 if __name__ == "__main__":
