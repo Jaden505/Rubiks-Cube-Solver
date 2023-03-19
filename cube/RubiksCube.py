@@ -4,7 +4,7 @@ class RubiksCube:
     def __init__(self):
         self.cube = {}
         self.faces = ["front", "right", "up", "bottom", "left", "down"]
-        self.colors = [1, 2, 3, 4, 5, 6]
+        self.colors = [0, 1, 2, 3, 4, 5]
         self.directions = ["clockwise", "counterclockwise"]
 
         for i in range(6):
@@ -96,8 +96,7 @@ class RubiksCube:
             face = [x for y in face for x in y]  # Flatten list
             reward += max([face.count(x) for x in self.colors])  # Get max count of each color
 
-        return reward / 54  # normalize reward
-
+        return reward
 
     def check_solved(self):
         return self.get_reward_state(self.get_cube_state()) == 54
@@ -119,11 +118,8 @@ class RubiksCube:
         return next_state, reward, done
 
     def get_reward_action(self, state, next_state):
-        max_action_reward = 12 / 54
-        improvement = self.get_reward_state(next_state) - self.get_reward_state(state)
-        improvement = 0 if improvement < 0 else improvement  # Set negatives to 0
-
-        return improvement / max_action_reward
+        reward = self.get_reward_state(next_state) - self.get_reward_state(state)
+        return reward / 12  # Divide by 12 to get a reward between -1 and 1
 
     def reset(self):
         self.__init__()
