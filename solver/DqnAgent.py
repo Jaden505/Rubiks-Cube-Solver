@@ -32,7 +32,7 @@ class DqnAgent:
         The input is a 6x3x3 cube
         The output is split into 2 branches one for the face and one for the direction
         """
-        input_layer = Input(shape=(6, 3, 3))
+        input_layer = Input(shape=(54, 6))
 
         # Define the model layers
         x = Flatten()(input_layer)
@@ -40,8 +40,8 @@ class DqnAgent:
         x = Dense(32, activation='elu')(x)
 
         # Define the output branches
-        face_output = Dense(6, activation='softmax', name='face_output')(x)
-        direction_output = Dense(2, activation='softmax', name='direction_output')(x)
+        face_output = Dense(6, activation='sigmoid', name='face_output')(x)
+        direction_output = Dense(2, activation='sigmoid', name='direction_output')(x)
 
         self.model = Model(inputs=input_layer, outputs=[face_output, direction_output])
 
@@ -63,10 +63,9 @@ class DqnAgent:
         @param model: The model to use to predict the action
         @return: The action to take
         """
-        state = np.array([state])  # Add batch dimension
-        DqnAgent.shape_state(state)
+        # state = DqnAgent.one_hot_encode(state)
 
-        face_prediction, direction_prediction = model.predict(state, verbose=0)
+        face_prediction, direction_prediction = model.predict(np.array([state]), verbose=0)
         face_prediction, direction_prediction = np.squeeze(face_prediction).tolist(), np.squeeze(direction_prediction).tolist()
 
         face_index = face_prediction.index(max(face_prediction))
@@ -78,11 +77,13 @@ class DqnAgent:
         """
         Trains the model using the batch of data
         """
-        state_batch, next_state_batch, reward_batch, action_batch, done_batch = list(batch.values())[1:]
-        state_batch, next_state_batch = np.array(state_batch), np.array(next_state_batch)  # Set as np arrays to get q-values
+        state_batch, next_state_batch, reward_batch, action_batch, done_batch = list(batch.values())  # [1:]
+        state_batch = np.array([DqnAgent.one_hot_encode(state) for state in state_batch])
+        next_state_batch = np.array([DqnAgent.one_hot_encode(state) for state in next_state_batch])
 
         face_target_q, direction_target_q, max_next_q_face, max_next_q_direction = self.get_q_values(state_batch,
                                                                                                      next_state_batch)
+
         for i in range(state_batch.shape[0]):
             face, direction = self.epsilon_greedy_policy(state_batch[i])
 
@@ -97,16 +98,11 @@ class DqnAgent:
         self.epsilon *= self.discount
 
     @staticmethod
-    def shape_state(state):
-        flat_state = state.flatten()
+    def one_hot_encode(state):
+        # One hot encode the state
+        flat_state = np.array(state).flatten()
         one_hot_identity = np.eye(6)
-        one_hot_state = one_hot_identity[flat_state]
-
-        one_hot_max = max(one_hot_state)
-        one_hot_min = min(one_hot_state)
-        one_hot_normalized = (one_hot_state - one_hot_min) / (one_hot_max - one_hot_min)
-
-        return one_hot_normalized
+        return one_hot_identity[flat_state.astype(int)]
 
     def get_q_values(self, state_batch, next_state_batch):
         face_current_q, direction_current_q = self.model.predict(state_batch)  # Get q-values of state
@@ -135,4 +131,4 @@ class DqnAgent:
             direction = round(rand())
             return face, direction
 
-        return DqnAgent.policy(state, self.target_model)
+        return DqnAgent.policy(state, self.model)

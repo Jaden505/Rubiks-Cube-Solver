@@ -101,18 +101,17 @@ class RubiksCube:
     def check_solved(self):
         return self.get_reward_state(self.get_cube_state()) == 54
 
-    def step(self, action):
+    def step(self, state, action):
         """
         Rotate the cube and return the next state, reward and if the cube is solved
         """
-        first_state = copy.deepcopy(self.get_cube_state())  # Store first state to calculate reward later
         action_face = self.faces[action[0]]  # Get face name from action
         action_direction = action[1]  # Get direction name from action
 
         self.rotate(action_face, action_direction)
 
         next_state = self.get_cube_state()
-        reward = self.get_reward_action(first_state, next_state)
+        reward = self.get_reward_action(state, next_state)
         done = self.check_solved()
 
         return next_state, reward, done
@@ -128,5 +127,3 @@ class RubiksCube:
 
 if __name__ == "__main__":
     rb = RubiksCube()
-    rb.scramble()
-    print(rb)

@@ -2,6 +2,7 @@ from cube import RubiksCube as rc
 from solver import DqnAgent as da, ReplayBuffer as rb
 
 from random import randint
+import copy
 
 
 class Main:
@@ -27,23 +28,14 @@ class Main:
         self.agent.model.save("../models/model.h5")
 
     def get_train_data(self):
-        state = self.cube.get_cube_state()
+        state = copy.deepcopy(self.cube.get_cube_state())
 
         for i in range(5000):
             action = self.get_random_action()
-            next_state, reward, done = self.cube.step(action)
-
-            print("Action: ", action)
-            print("Reward: ", reward)
-            print("State: ", state)
-            print("Next state: ", next_state)
+            next_state, reward, done = self.cube.step(state, action)
 
             self.buffer.add_gameplay(state, next_state, reward, action, done)
-            state = next_state
-
-            if done:
-                print("Solved!")
-                break
+            state = copy.deepcopy(next_state)
 
         self.buffer.save()
 
