@@ -118,7 +118,7 @@ class RubiksCube:
 
     def get_reward_action(self, state, next_state):
         reward = self.get_reward_state(next_state) - self.get_reward_state(state)
-        return reward / 12  # Divide by 12 to get a reward between -1 and 1
+        return (reward / 12) + 1  # reward between 0 and 2
 
     def reset(self):
         self.__init__()

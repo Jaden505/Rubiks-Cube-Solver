@@ -14,15 +14,15 @@ class Main:
 
         self.buffer.load()
 
-        self.STEPS = 30
-        self.DATA_SIZE = 64
+        self.STEPS = 100
+        self.DATA_SIZE = 328
 
     def train_model(self):
         for step in range(self.STEPS):
             batch = self.buffer.sample_gameplay_batch(self.DATA_SIZE)
             self.agent.train(batch)
 
-            if step % 5 == 0:
+            if step % 3 == 0:
                 self.agent.update_target_model()
 
         self.agent.model.save("../models/model.h5")

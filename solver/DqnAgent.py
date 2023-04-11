@@ -6,7 +6,7 @@ from random import random as rand
 from keras.models import clone_model
 from keras.models import Model
 from keras.layers import *
-
+from keras.optimizers import Adam
 
 class DqnAgent:
     """
@@ -23,7 +23,6 @@ class DqnAgent:
         self.target_model = clone_model(self.model)
         self.update_target_model()
 
-        self.discount = 0.95  # discount rate
         self.epsilon = 1.0  # exploration rate
 
     def create_model(self):
@@ -36,8 +35,9 @@ class DqnAgent:
 
         # Define the model layers
         x = Flatten()(input_layer)
-        x = Dense(64, activation='elu')(x)
-        x = Dense(32, activation='elu')(x)
+        x = Dense(32, activation="relu")(x)
+        x = Dense(64, activation="relu")(x)
+        x = Dense(128, activation="relu")(x)
 
         # Define the output branches
         face_output = Dense(6, activation='sigmoid', name='face_output')(x)
@@ -52,7 +52,7 @@ class DqnAgent:
         }
 
         # Compile the model with the optimizer, loss function, and metrics
-        self.model.compile(optimizer='adam', loss=losses, metrics=['accuracy'])
+        self.model.compile(optimizer=Adam(learning_rate=0.001), loss=losses, metrics=['mse'])
 
     @staticmethod
     def policy(state, model):
@@ -63,8 +63,6 @@ class DqnAgent:
         @param model: The model to use to predict the action
         @return: The action to take
         """
-        # state = DqnAgent.one_hot_encode(state)
-
         face_prediction, direction_prediction = model.predict(np.array([state]), verbose=0)
         face_prediction, direction_prediction = np.squeeze(face_prediction).tolist(), np.squeeze(direction_prediction).tolist()
 
@@ -77,25 +75,28 @@ class DqnAgent:
         """
         Trains the model using the batch of data
         """
-        state_batch, next_state_batch, reward_batch, action_batch, done_batch = list(batch.values())  # [1:]
+        state_batch, next_state_batch, reward_batch, action_batch, done_batch = list(batch.values())
         state_batch = np.array([DqnAgent.one_hot_encode(state) for state in state_batch])
         next_state_batch = np.array([DqnAgent.one_hot_encode(state) for state in next_state_batch])
 
-        face_target_q, direction_target_q, max_next_q_face, max_next_q_direction = self.get_q_values(state_batch,
-                                                                                                     next_state_batch)
+        faces_q, directions_q, next_target_q_faces, next_target_q_directions = \
+            self.get_q_values(state_batch, next_state_batch)
+
+        max_next_q_faces, max_next_q_directions =\
+            np.amax(next_target_q_faces, axis=1), np.amax(next_target_q_directions, axis=1)
 
         for i in range(state_batch.shape[0]):
-            face, direction = self.epsilon_greedy_policy(state_batch[i])
+            face, direction = DqnAgent.policy(state_batch[i], self.model)
 
-            reward_face = reward_batch[i] + (self.discount * max_next_q_face[i])
-            reward_direction = reward_batch[i] + (self.discount * max_next_q_direction[i])
+            reward_face = (reward_batch[i] + (0.95 * max_next_q_faces[i])) / 2.95
+            reward_direction = (reward_batch[i] + (0.95 * max_next_q_directions[i])) / 2.95
 
-            face_target_q[i][face] = reward_face  # Reward rotation face
-            direction_target_q[i][direction] = reward_direction  # Reward rotation direction
 
-        self.model.fit(x=state_batch, y=[face_target_q, direction_target_q])
 
-        self.epsilon *= self.discount
+            faces_q[i][face] = reward_face  # Reward rotation face
+            directions_q[i][direction] = reward_direction  # Reward rotation direction
+
+        self.model.fit(x=state_batch, y=[faces_q, directions_q])
 
     @staticmethod
     def one_hot_encode(state):
@@ -105,15 +106,10 @@ class DqnAgent:
         return one_hot_identity[flat_state.astype(int)]
 
     def get_q_values(self, state_batch, next_state_batch):
-        face_current_q, direction_current_q = self.model.predict(state_batch)  # Get q-values of state
-        face_target_q, direction_target_q = np.copy(face_current_q), np.copy(
-            direction_current_q)  # Copy q-values to target q-values
+        face_target_q, direction_target_q = self.model.predict(state_batch)  # Get q-values of state
         face_next_q, direction_next_q = self.target_model.predict(next_state_batch)  # Get q-values of state
 
-        max_next_q_face = np.amax(face_next_q, axis=1)
-        max_next_q_direction = np.amax(direction_next_q, axis=1)
-
-        return face_target_q, direction_target_q, max_next_q_face, max_next_q_direction
+        return face_target_q, direction_target_q, face_next_q, direction_next_q
 
     def update_target_model(self):
         """
