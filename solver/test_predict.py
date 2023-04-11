@@ -1,7 +1,7 @@
 from keras.models import load_model
 
-from cube import RubiksCube as rc
-import DqnAgent
+from cube import rubiks_cube as rc
+import dqn_agent
 
 import copy
 

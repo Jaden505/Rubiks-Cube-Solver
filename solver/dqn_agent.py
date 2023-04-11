@@ -1,4 +1,4 @@
-import ReplayBuffer as rb
+import replay_buffer as rb
 
 import numpy as np
 from random import random as rand
@@ -7,6 +7,7 @@ from keras.models import clone_model
 from keras.models import Model
 from keras.layers import *
 from keras.optimizers import Adam
+
 
 class DqnAgent:
     """
@@ -64,7 +65,8 @@ class DqnAgent:
         @return: The action to take
         """
         face_prediction, direction_prediction = model.predict(np.array([state]), verbose=0)
-        face_prediction, direction_prediction = np.squeeze(face_prediction).tolist(), np.squeeze(direction_prediction).tolist()
+        face_prediction, direction_prediction = np.squeeze(face_prediction).tolist(), np.squeeze(
+            direction_prediction).tolist()
 
         face_index = face_prediction.index(max(face_prediction))
         direction = 1 if direction_prediction[0] > direction_prediction[1] else 0
@@ -82,7 +84,7 @@ class DqnAgent:
         faces_q, directions_q, next_target_q_faces, next_target_q_directions = \
             self.get_q_values(state_batch, next_state_batch)
 
-        max_next_q_faces, max_next_q_directions =\
+        max_next_q_faces, max_next_q_directions = \
             np.amax(next_target_q_faces, axis=1), np.amax(next_target_q_directions, axis=1)
 
         for i in range(state_batch.shape[0]):
@@ -90,8 +92,6 @@ class DqnAgent:
 
             reward_face = (reward_batch[i] + (0.95 * max_next_q_faces[i])) / 2.95
             reward_direction = (reward_batch[i] + (0.95 * max_next_q_directions[i])) / 2.95
-
-
 
             faces_q[i][face] = reward_face  # Reward rotation face
             directions_q[i][direction] = reward_direction  # Reward rotation direction

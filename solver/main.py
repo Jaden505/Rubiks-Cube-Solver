@@ -1,5 +1,5 @@
-from cube import RubiksCube as rc
-from solver import DqnAgent as da, ReplayBuffer as rb
+from cube import rubiks_cube as rc
+from solver import dqn_agent as da, replay_buffer as rb
 
 from random import randint
 import copy
