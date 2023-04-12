@@ -1,23 +1,28 @@
-from rubiks_cube import RubiksCube
+from cube.rubiks_cube import RubiksCube
 
 import random
 
 
 class CubeHelper(RubiksCube):
+    def __init__(self):
+        super().__init__()
+
     def scramble(self):
         for _ in range(100):
-            face = random.choice(self.faces)
-            direction = random.choice(self.directions)
-            self.rotate(face, direction)
+            self.rotate(random.choice(self.cube_rotations))
 
     def get_cube_state(self):
         return list(self.cube.values())
 
-    def get_reward_state(self, state):
+    def get_reward_state(self, cube):
         reward = 0
-        for face in state:
-            face = [x for y in face for x in y]  # Flatten list
-            reward += max([face.count(x) for x in self.colors])  # Get max count of each color
+
+        reward += sum(row.count(0) for row in cube['U'])
+        reward += sum(row.count(1) for row in cube['D'])
+        reward += sum(row.count(2) for row in cube['F'])
+        reward += sum(row.count(3) for row in cube['B'])
+        reward += sum(row.count(4) for row in cube['R'])
+        reward += sum(row.count(5) for row in cube['L'])
 
         return reward
 
@@ -28,10 +33,7 @@ class CubeHelper(RubiksCube):
         """
         Rotate the cube and return the next state, reward and if the cube is solved
         """
-        action_face = self.faces[action[0]]  # Get face name from action
-        action_direction = action[1]  # Get direction name from action
-
-        self.rotate(action_face, action_direction)
+        self.rotate(action)
 
         next_state = self.get_cube_state()
         reward = self.get_reward_action(state, next_state)
@@ -47,5 +49,3 @@ class CubeHelper(RubiksCube):
         self.__init__()
         return self.get_cube_state()
 
-    def __str__(self):
-        return str(self.cube)

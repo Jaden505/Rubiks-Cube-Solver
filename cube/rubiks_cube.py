@@ -1,9 +1,17 @@
 class RubiksCube:
     def __init__(self):
         self.cube = {}
-        self.faces = ["front", "right", "up", "bottom", "left", "down"]
-        self.colors = [0, 1, 2, 3, 4, 5]
+        self.faces = ["U", "D", "F", "B", "R", "L"]
         self.directions = ["clockwise", "counterclockwise"]
+        self.colors = [0, 1, 2, 3, 4, 5]
+        self.cube_rotations = [
+            "U", "U2", "U'",  # Upper face rotations
+            "D", "D2", "D'",  # Down face rotations
+            "F", "F2", "F'",  # Front face rotations
+            "B", "B2", "B'",  # Back face rotations
+            "R", "R2", "R'",  # Right face rotations
+            "L", "L2", "L'"  # Left face rotations
+        ]
 
         for i in range(6):
             self.cube[self.faces[i]] = [[self.colors[i] for _ in range(3)] for _ in range(3)]
@@ -43,25 +51,37 @@ class RubiksCube:
                 for i in range(3):
                     self.cube[cube_name][i][position] = next_cube[i]
 
-    def rotate(self, face, direction):
+    def rotate(self, rotation_str):
         """
-            Rotate a row or column of the cube depending on the face given
-            :param face: The face of the cube to rotate (front, right, up, bottom, left, down)
-            :param direction: The direction to rotate the face (clockwise or counterclockwise)
+            Rotate a row or column of the cube depending on the input string
+            :param rotation_str: The string to rotate the cube based on one of the strings in `cube_rotations`
         """
 
-        if face == "front":
-            self.rotate_face(["right", "up", "left", "down"], direction, 0, "rows")
-        elif face == "right":
-            self.rotate_face(["front", "down", "bottom", "up"], direction, 2, "columns")
-        elif face == "up":
-            self.rotate_face(["front", "right", "bottom", "left"], direction, 0, "columns")
-        elif face == "bottom":
-            self.rotate_face(["up", "right", "down", "left"], direction, 2, "rows")
-        elif face == "left":
-            self.rotate_face(["front", "up", "bottom", "down"], direction, 0, "columns")
-        elif face == "down":
-            self.rotate_face(["front", "left", "bottom", "right"], direction, 2, "columns")
+        if rotation_str not in self.cube_rotations:
+            raise Exception("Invalid rotation string given")
+
+        face = rotation_str[0]
+        direction = "clockwise"
+        if len(rotation_str) > 1:
+            if rotation_str[1] == "2":
+                self.rotate(rotation_str[0] + "'")
+                self.rotate(rotation_str[0] + "'")
+                return self.cube
+            elif rotation_str[1] == "'":
+                direction = "counterclockwise"
+
+        if face == "U":
+            self.rotate_face(["R", "F", "L", "B"], direction, 0, "rows")
+        elif face == "D":
+            self.rotate_face(["R", "B", "L", "F"], direction, 2, "rows")
+        elif face == "F":
+            self.rotate_face(["U", "R", "D", "L"], direction, 0, "columns")
+        elif face == "B":
+            self.rotate_face(["U", "L", "D", "R"], direction, 2, "columns")
+        elif face == "R":
+            self.rotate_face(["U", "B", "D", "F"], direction, 2, "columns")
+        elif face == "L":
+            self.rotate_face(["U", "F", "D", "B"], direction, 0, "columns")
         else:
             raise Exception("Invalid face name given")
 
@@ -75,6 +95,9 @@ class RubiksCube:
             self.rotate_rows(affected_cubes, position)
         else:
             self.rotate_columns(affected_cubes, position)
+
+    def __str__(self):
+        return str(self.cube)
 
 
 if __name__ == "__main__":

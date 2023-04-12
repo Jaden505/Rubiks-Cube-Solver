@@ -1,21 +1,22 @@
+from cube.helper_cube import CubeHelper
+from dqn_agent import DqnAgent
+
 from keras.models import load_model
-
-from cube import rubiks_cube as rc
-import dqn_agent
-
 import copy
 
-model = load_model('../models/model.h5')
+model = load_model('../models/model2.h5')
+
 
 def try_solve():
-    cube = rc.RubiksCube()
+    cube = CubeHelper()
+    agent = DqnAgent()
+
     cube.scramble()
 
     state = copy.deepcopy(cube.get_cube_state())
 
     for i in range(5000):
-        action = list(da.policy(da.one_hot_encode(state), model))
-        action[1] = "clockwise" if action[1] == 0 else "counterclockwise"
+        action = agent.policy(agent.one_hot_encode(state), model)
 
         next_state, reward, done = cube.step(state, action)
 
@@ -30,5 +31,4 @@ def try_solve():
             break
 
 
-da = DqnAgent.DqnAgent()
 try_solve()
