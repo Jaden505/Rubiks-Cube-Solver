@@ -1,20 +1,19 @@
-from cube import rubiks_cube as rc
-from solver import dqn_agent as da, replay_buffer as rb
+from cube.helper_cube import CubeHelper
+from solver.dqn_agent import DqnAgent
+from solver.replay_buffer import ReplayBuffer
 
-from random import randint
+import random
 import copy
 
 
 class Main:
     def __init__(self):
-        self.cube = rc.RubiksCube()
+        self.cube = CubeHelper()
 
-        self.agent = da.DqnAgent()
-        self.buffer = rb.ReplayBuffer()
+        self.agent = DqnAgent()
+        self.buffer = ReplayBuffer()
 
-        self.buffer.load()
-
-        self.STEPS = 10
+        self.STEPS = 20
         self.DATA_SIZE = 328
 
     def train_model(self):
@@ -40,8 +39,7 @@ class Main:
         self.buffer.save()
 
     def get_random_action(self):
-        directions = ['clockwise', 'counterclockwise']
-        return randint(0, 5), directions[randint(0, 1)]
+        return random.choice(self.cube.cube_rotations)
 
 
 if __name__ == "__main__":

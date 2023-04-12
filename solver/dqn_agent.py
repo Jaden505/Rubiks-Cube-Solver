@@ -40,7 +40,7 @@ class DqnAgent:
         x = Dense(32, activation="relu")(x)
         x = Dense(64, activation="relu")(x)
         x = Dense(128, activation="relu")(x)
-        output_layer = Dense(18, activation="softmax")(x)
+        output_layer = Dense(18, activation="sigmoid")(x)
 
         self.model = Model(inputs=input_layer, outputs=output_layer)
         self.model.compile(optimizer=Adam(learning_rate=0.001), loss='categorical_crossentropy', metrics=['mse'])

@@ -102,3 +102,4 @@ class RubiksCube:
 
 if __name__ == "__main__":
     rb = RubiksCube()
+    print(rb.cube.values())

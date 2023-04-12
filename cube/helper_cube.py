@@ -1,6 +1,7 @@
 from cube.rubiks_cube import RubiksCube
 
 import random
+import numpy as np
 
 
 class CubeHelper(RubiksCube):
@@ -14,20 +15,24 @@ class CubeHelper(RubiksCube):
     def get_cube_state(self):
         return list(self.cube.values())
 
-    def get_reward_state(self, cube):
-        reward = 0
+    @staticmethod
+    def reward_function(state, next_state):
+        """
+        Calculate the reward for the current action based on solved faces
+        :return reward between -6 and 6
+        """
+        state, next_state = np.array(state), np.array(next_state)
 
-        reward += sum(row.count(0) for row in cube['U'])
-        reward += sum(row.count(1) for row in cube['D'])
-        reward += sum(row.count(2) for row in cube['F'])
-        reward += sum(row.count(3) for row in cube['B'])
-        reward += sum(row.count(4) for row in cube['R'])
-        reward += sum(row.count(5) for row in cube['L'])
+        # Calculate the number of solved faces
+        solved_faces = np.sum(np.all(state == state[:, 0, 0][:, None, None], axis=(1, 2)))
+        next_solved_faces = np.sum(np.all(next_state == next_state[:, 0, 0][:, None, None], axis=(1, 2)))
+        print(solved_faces, next_solved_faces)
 
-        return reward
+        return next_solved_faces - solved_faces
 
     def check_solved(self):
-        return self.get_reward_state(self.get_cube_state()) == 54
+        state = np.array(self.get_cube_state())
+        return np.all(state == state[:, 0, 0][:, None, None], axis=(1, 2)).all()
 
     def step(self, state, action):
         """
@@ -36,16 +41,15 @@ class CubeHelper(RubiksCube):
         self.rotate(action)
 
         next_state = self.get_cube_state()
-        reward = self.get_reward_action(state, next_state)
+        reward = CubeHelper.reward_function(state, next_state)
         done = self.check_solved()
 
         return next_state, reward, done
-
-    def get_reward_action(self, state, next_state):
-        reward = self.get_reward_state(next_state) - self.get_reward_state(state)
-        return (reward / 12) + 1  # reward between 0 and 2
 
     def reset(self):
         self.__init__()
         return self.get_cube_state()
 
+
+if __name__ == "__main__":
+    cube = CubeHelper()
