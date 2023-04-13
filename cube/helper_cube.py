@@ -26,7 +26,6 @@ class CubeHelper(RubiksCube):
         # Calculate the number of solved faces
         solved_faces = np.sum(np.all(state == state[:, 0, 0][:, None, None], axis=(1, 2)))
         next_solved_faces = np.sum(np.all(next_state == next_state[:, 0, 0][:, None, None], axis=(1, 2)))
-        print(solved_faces, next_solved_faces)
 
         return next_solved_faces - solved_faces
 
