@@ -25,11 +25,13 @@ class DqnAgent:
         self.update_target_model()
 
         self.epsilon = 1.0
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.98
         self.epsilon_min = 0.01
 
-        self.rotation_dict = {0: "U", 1: "U'", 2: "U2", 3: "D", 4: "D'", 5: "D2", 6: "L", 7: "L'", 8: "L2", 9: "R",
-                              10: "R'", 11: "R2", 12: "F", 13: "F'", 14: "F2", 15: "B", 16: "B'", 17: "B2"}
+        self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
+                              6: "R", 7: "R'", 8: "F", 9: "F'", 10: "B", 11: "B'"}
+
+        self.prev_pred = None
 
     def create_model(self):
         """
@@ -40,23 +42,25 @@ class DqnAgent:
         input_layer = Input(shape=(54, 6))
         x = Flatten()(input_layer)
         x = Dense(32, activation="relu")(x)
+        x = Dropout(0.2)(x)
         x = Dense(64, activation="relu")(x)
-        x = Dense(128, activation="relu")(x)
-        output_layer = Dense(18, activation="sigmoid")(x)
+        x = Dropout(0.2)(x)
+        output_layer = Dense(12, activation='softmax')(x)
 
         self.model = Model(inputs=input_layer, outputs=output_layer)
-        self.model.compile(optimizer=Adam(learning_rate=0.001), loss='categorical_crossentropy', metrics=['mse'])
+        self.model.compile(optimizer=Adam(learning_rate=0.005), loss='categorical_crossentropy', metrics=['mse'])
 
     def policy(self, state, model, get_index=False):
         """
-        Takes a state from the Rubik's cube and returns
-        an action that should be taken.
-        @param state: The current state of the Rubik's cube
-        @param model: The model to use to predict the action
-        @return: The action to take
+        Takes a state from the Rubik's cube and returns an action that should be taken.
         """
         prediction_array = model.predict(np.array([state]), verbose=0)
         prediction_index = np.argmax(prediction_array)
+
+        if prediction_index == self.prev_pred:
+            print(prediction_index)
+
+        self.prev_pred = prediction_index
 
         if get_index:
             return prediction_index
@@ -75,13 +79,12 @@ class DqnAgent:
         max_next_q = np.amax(next_q, axis=1)
 
         for i in range(state_batch.shape[0]):
-            reward = reward_batch[i] + (0.95 * max_next_q[i])
-            action = self.policy(state_batch[i], self.model, get_index=True)
+            reward = (reward_batch[i] + (0.95 * max_next_q[i])) / 2.95
 
             if done_batch[i]:
-                reward = 20  # If the cube is solved, give it a high reward
+                reward = 1  # If the cube is solved, give it a high reward
 
-            target_q[i][action] = reward
+            target_q[i][action_batch[i]] = reward
 
         self.model.fit(x=state_batch, y=target_q)
         self.epsilon = max(self.epsilon * self.epsilon_decay, self.epsilon_min)  # Decay epsilon

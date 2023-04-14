@@ -4,31 +4,50 @@ from dqn_agent import DqnAgent
 from keras.models import load_model
 import copy
 
-model = load_model('../models/model2.h5')
+cube = CubeHelper()
+agent = DqnAgent()
+model = load_model('../models/model.h5')
 
 
 def try_solve():
-    cube = CubeHelper()
-    agent = DqnAgent()
-
     cube.scramble()
 
-    state = copy.deepcopy(cube.get_cube_state())
-
     for i in range(5000):
-        action = agent.policy(agent.one_hot_encode(state), model)
+        action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
 
-        next_state, reward, done = cube.step(state, action)
-
-        state = copy.deepcopy(next_state)
+        cube.step(action)
 
         print("Action: ", action)
-        print("Reward: ", reward)
-        print("Progress: ", cube.get_reward_state(next_state))
+        print("Progress: ", cube.reward_color_count(cube.get_cube_state()))
 
-        if done:
-            print("Solved!")
-            break
+        # if done:
+        #     print("Solved!")
+        #     break
 
 
-try_solve()
+# try_solve()
+cube.scramble()
+print(cube)
+
+action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
+print(action, cube.get_cube_state())
+
+cube.step(action)
+
+action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
+print(action)
+
+cube.step(action)
+
+action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
+print(action)
+
+cube.step(action)
+
+action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
+print(action)
+
+cube.step(action)
+
+action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
+print(action)

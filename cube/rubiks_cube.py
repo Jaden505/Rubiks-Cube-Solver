@@ -5,12 +5,12 @@ class RubiksCube:
         self.directions = ["clockwise", "counterclockwise"]
         self.colors = [0, 1, 2, 3, 4, 5]
         self.cube_rotations = [
-            "U", "U2", "U'",  # Upper face rotations
-            "D", "D2", "D'",  # Down face rotations
-            "F", "F2", "F'",  # Front face rotations
-            "B", "B2", "B'",  # Back face rotations
-            "R", "R2", "R'",  # Right face rotations
-            "L", "L2", "L'"  # Left face rotations
+            "U", "U'",  # Upper face rotations
+            "D", "D'",  # Down face rotations
+            "F", "F'",  # Front face rotations
+            "B", "B'",  # Back face rotations
+            "R", "R'",  # Right face rotations
+            "L", "L'"  # Left face rotations
         ]
 
         for i in range(6):
@@ -102,4 +102,4 @@ class RubiksCube:
 
 if __name__ == "__main__":
     rb = RubiksCube()
-    print(rb.cube.values())
+    print(rb.cube)

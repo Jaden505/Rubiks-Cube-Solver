@@ -1,3 +1,5 @@
+import copy
+
 from cube.rubiks_cube import RubiksCube
 
 import random
@@ -16,7 +18,7 @@ class CubeHelper(RubiksCube):
         return list(self.cube.values())
 
     @staticmethod
-    def reward_function(state, next_state):
+    def reward_face_solved(state, next_state):
         """
         Calculate the reward for the current action based on solved faces
         :return reward between -6 and 6
@@ -29,21 +31,41 @@ class CubeHelper(RubiksCube):
 
         return next_solved_faces - solved_faces
 
+    def reward_color_count(self, state):
+        """
+        Calculate the reward for the current action based on number of corresponding colors on each face
+        :return reward between 0 and 1
+        """
+        reward = 0
+        for face in state:
+            face = [x for y in face for x in y]  # Flatten list
+            reward += max([face.count(x) for x in self.colors])  # Get max count of each color
+
+        return reward
+
     def check_solved(self):
         state = np.array(self.get_cube_state())
         return np.all(state == state[:, 0, 0][:, None, None], axis=(1, 2)).all()
 
-    def step(self, state, action):
+    def step(self, action):
         """
         Rotate the cube and return the next state, reward and if the cube is solved
         """
+        state = copy.deepcopy(self.get_cube_state())
+
         self.rotate(action)
 
-        next_state = self.get_cube_state()
-        reward = CubeHelper.reward_function(state, next_state)
+        next_state = copy.deepcopy(self.get_cube_state())
+        # reward = self.reward_color_count(next_state) - self.reward_color_count(state)
+        # reward = CubeHelper.reward_face_solved(state, next_state)
+        reward = self.reward_action(state, next_state)
         done = self.check_solved()
 
         return next_state, reward, done
+
+    def reward_action(self, state, next_state):
+        reward = self.reward_color_count(next_state) - self.reward_color_count(state)
+        return (reward / 12) + 1  # reward between 0 and 2
 
     def reset(self):
         self.__init__()
@@ -52,3 +74,4 @@ class CubeHelper(RubiksCube):
 
 if __name__ == "__main__":
     cube = CubeHelper()
+    cube.scramble()
