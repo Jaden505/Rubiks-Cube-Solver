@@ -2,8 +2,7 @@ from cube.helper_cube import CubeHelper
 from solver.dqn_agent import DqnAgent
 from solver.replay_buffer import ReplayBuffer
 
-import copy, random
-import numpy as np
+import copy
 
 
 class Main:
@@ -13,19 +12,17 @@ class Main:
         self.agent = DqnAgent()
         self.buffer = ReplayBuffer()
 
-        self.STEPS = 30
-        self.BATCH_SIZE = 90
+        self.STEPS = 50
+        self.BATCH_SIZE = 50
 
     def train_model(self):
-        for step in range(1, self.STEPS):
+        for step in range(self.STEPS):
             self.get_train_data()
             batch = self.buffer.sample_gameplay_batch(self.BATCH_SIZE)
             self.agent.train(batch)
 
-            if step % 3 == 0:
+            if step % 1 == 0:
                 self.agent.update_target_model()
-
-            self.buffer.clear_buffer()
 
         self.agent.model.save("../models/model.h5")
 
@@ -34,18 +31,13 @@ class Main:
         state = copy.deepcopy(self.cube.get_cube_state())
 
         for i in range(self.BATCH_SIZE):
-            if np.random.rand() < self.agent.epsilon:
-                action = random.choice(self.cube.cube_rotations)
-            else:
-                action = self.agent.policy(self.agent.one_hot_encode(state), self.agent.model)
+            ohe_state = self.agent.one_hot_encode(state)
+            action, q_state = self.agent.boltzmann_exploration(ohe_state, self.agent.model)
+            next_state, reward, done = self.cube.step(self.agent.rotation_dict[action])
+            _, q_next_state = self.agent.boltzmann_exploration(self.agent.one_hot_encode(next_state), self.agent.target_model)
 
-            next_state, reward, done = self.cube.step(action)
-            self.buffer.add_to_buffer(state, next_state, reward, action, done)
-
+            self.buffer.add_to_buffer(state, next_state, q_state, q_next_state, reward, action, done)
             state = copy.deepcopy(next_state)
-
-            if done:
-                break
 
 
 if __name__ == "__main__":

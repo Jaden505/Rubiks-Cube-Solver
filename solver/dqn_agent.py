@@ -1,3 +1,5 @@
+import copy
+
 import replay_buffer as rb
 
 import numpy as np
@@ -24,14 +26,14 @@ class DqnAgent:
         self.target_model = clone_model(self.model)
         self.update_target_model()
 
-        self.epsilon = 1.0
-        self.epsilon_decay = 0.98
-        self.epsilon_min = 0.01
+        self.temp = 1.0
+        self.temp_decay = 0.98
+        self.temp_min = 0.01
 
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
                               6: "R", 7: "R'", 8: "F", 9: "F'", 10: "B", 11: "B'"}
 
-        self.prev_pred = None
+        # self.prev_pred = None
 
     def create_model(self):
         """
@@ -48,7 +50,7 @@ class DqnAgent:
         output_layer = Dense(12, activation='softmax')(x)
 
         self.model = Model(inputs=input_layer, outputs=output_layer)
-        self.model.compile(optimizer=Adam(learning_rate=0.005), loss='categorical_crossentropy', metrics=['mse'])
+        self.model.compile(optimizer=Adam(learning_rate=0.001), loss='categorical_crossentropy', metrics=['mse'])
 
     def policy(self, state, model, get_index=False):
         """
@@ -57,10 +59,10 @@ class DqnAgent:
         prediction_array = model.predict(np.array([state]), verbose=0)
         prediction_index = np.argmax(prediction_array)
 
-        if prediction_index == self.prev_pred:
-            print(prediction_index)
-
-        self.prev_pred = prediction_index
+        # if prediction_index == self.prev_pred:
+        #     print(prediction_index)
+        #
+        # self.prev_pred = prediction_index
 
         if get_index:
             return prediction_index
@@ -71,39 +73,41 @@ class DqnAgent:
         """
         Trains the model using the batch of data
         """
-        state_batch, next_state_batch, reward_batch, action_batch, done_batch = list(batch.values())
+        state_batch, next_state_batch, q_state, q_next_state, reward_batch, action_batch, done_batch = list(batch.values())
         state_batch = np.array([DqnAgent.one_hot_encode(state) for state in state_batch])
-        next_state_batch = np.array([DqnAgent.one_hot_encode(state) for state in next_state_batch])
 
-        target_q, next_q = self.get_q_values(state_batch, next_state_batch)
-        max_next_q = np.amax(next_q, axis=1)
+        target_q = np.array(q_state)
+        max_next_q = np.amax(q_next_state, axis=1)
 
         for i in range(state_batch.shape[0]):
             reward = (reward_batch[i] + (0.95 * max_next_q[i])) / 2.95
-
-            if done_batch[i]:
-                reward = 1  # If the cube is solved, give it a high reward
-
             target_q[i][action_batch[i]] = reward
 
         self.model.fit(x=state_batch, y=target_q)
-        self.epsilon = max(self.epsilon * self.epsilon_decay, self.epsilon_min)  # Decay epsilon
+        self.temp = max(self.temp * self.temp_decay, self.temp_min)
 
     @staticmethod
     def one_hot_encode(state):
-        # One hot encode the state
+        """
+        Input is a 6x3x3 array of the Rubik's cube
+        Output is a one-hot encoded array of the Rubik's cube of shape 54x6
+        """
         flat_state = np.array(state).flatten()
         one_hot_identity = np.eye(6)
         return one_hot_identity[flat_state.astype(int)]
 
-    def get_q_values(self, state_batch, next_state_batch):
-        target_q = self.model.predict(state_batch)
-        next_q = self.target_model.predict(next_state_batch)
+    def boltzmann_exploration(self, ohe_state, model):
+        """
+        Input is a list of One-hot encoded values for each action
+        Output is an action that should be taken
+        """
+        q_state = model.predict(np.array([ohe_state]), verbose=0).tolist()[0]
+        prob_values = self._softmax(np.array(q_state) / self.temp)
+        return np.random.choice(len(prob_values), p=prob_values), q_state
 
-        return target_q, next_q
+    @staticmethod
+    def _softmax(x):
+        return np.exp(x) / np.sum(np.exp(x), axis=0)
 
     def update_target_model(self):
-        """
-        Updates the target model with the current model's weights
-        """
         self.target_model.set_weights(self.model.get_weights())

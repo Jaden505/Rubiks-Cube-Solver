@@ -14,8 +14,7 @@ def try_solve():
 
     for i in range(5000):
         action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-
-        cube.step(action)
+        cube.rotate(action)
 
         print("Action: ", action)
         print("Progress: ", cube.reward_color_count(cube.get_cube_state()))
@@ -25,29 +24,28 @@ def try_solve():
         #     break
 
 
-# try_solve()
-cube.scramble()
-print(cube)
-
-action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-print(action, cube.get_cube_state())
-
-cube.step(action)
-
-action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-print(action)
-
-cube.step(action)
-
-action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-print(action)
-
-cube.step(action)
-
-action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-print(action)
-
-cube.step(action)
-
-action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-print(action)
+try_solve()
+# cube.scramble()
+#
+# action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
+# print(action, cube.get_cube_state())
+#
+# cube.step(action)
+#
+# action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
+# print(action, cube.get_cube_state())
+#
+# cube.step(action)
+#
+# action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
+# print(action)
+#
+# cube.step(action)
+#
+# action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
+# print(action)
+#
+# cube.step(action)
+#
+# action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
+# print(action)
