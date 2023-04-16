@@ -27,7 +27,7 @@ class DqnAgent:
         self.update_target_model()
 
         self.temp = 1.0
-        self.temp_decay = 0.98
+        self.temp_decay = 0.99
         self.temp_min = 0.01
 
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",

@@ -25,27 +25,3 @@ def try_solve():
 
 
 try_solve()
-# cube.scramble()
-#
-# action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-# print(action, cube.get_cube_state())
-#
-# cube.step(action)
-#
-# action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-# print(action, cube.get_cube_state())
-#
-# cube.step(action)
-#
-# action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-# print(action)
-#
-# cube.step(action)
-#
-# action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-# print(action)
-#
-# cube.step(action)
-#
-# action = agent.policy(agent.one_hot_encode(cube.get_cube_state()), model)
-# print(action)

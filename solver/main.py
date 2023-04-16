@@ -14,6 +14,7 @@ class Main:
 
         self.STEPS = 50
         self.BATCH_SIZE = 50
+        self.TARGET_UPDATE = 10
 
     def train_model(self):
         for step in range(self.STEPS):
@@ -21,7 +22,7 @@ class Main:
             batch = self.buffer.sample_gameplay_batch(self.BATCH_SIZE)
             self.agent.train(batch)
 
-            if step % 1 == 0:
+            if step % self.TARGET_UPDATE == 0:
                 self.agent.update_target_model()
 
         self.agent.model.save("../models/model.h5")
