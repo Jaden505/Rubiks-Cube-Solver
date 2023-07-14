@@ -56,8 +56,6 @@ class CubeHelper(RubiksCube):
         self.rotate(action)
 
         next_state = copy.deepcopy(self.get_cube_state())
-        # reward = self.reward_color_count(next_state) - self.reward_color_count(state)
-        # reward = CubeHelper.reward_face_solved(state, next_state)
         reward = self.reward_action(state, next_state)
         done = self.check_solved()
 
@@ -65,7 +63,12 @@ class CubeHelper(RubiksCube):
 
     def reward_action(self, state, next_state):
         reward = self.reward_color_count(next_state) - self.reward_color_count(state)
-        return (reward / 12) + 1  # reward between 0 and 2
+
+        solved_face = 0
+        if (self.reward_face_solved(state, next_state) / 6) > 0:
+            solved_face = 1
+
+        return (reward / 12) + solved_face  # reward between 0 and 2
 
     def reset(self):
         self.__init__()

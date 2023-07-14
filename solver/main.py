@@ -8,13 +8,12 @@ import copy
 class Main:
     def __init__(self):
         self.cube = CubeHelper()
-
         self.agent = DqnAgent()
         self.buffer = ReplayBuffer()
 
-        self.STEPS = 50
-        self.BATCH_SIZE = 50
-        self.TARGET_UPDATE = 10
+        self.STEPS = 250
+        self.BATCH_SIZE = 156
+        self.TARGET_UPDATE = 16
 
     def train_model(self):
         for step in range(self.STEPS):

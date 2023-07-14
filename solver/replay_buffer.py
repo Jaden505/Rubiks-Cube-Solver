@@ -6,10 +6,10 @@ class ReplayBuffer:
     def __init__(self):
         self.df = pd.DataFrame(columns=["state", "next_state", "q_state", "q_next_state", "reward", "action", "done"])
 
-        self.df['state'] = self.df['state'].apply(lambda x: ast.literal_eval(x))
-        self.df['next_state'] = self.df['next_state'].apply(lambda x: ast.literal_eval(x))
-        self.df['q_state'] = self.df['q_state'].apply(lambda x: ast.literal_eval(x))
-        self.df['q_next_state'] = self.df['q_next_state'].apply(lambda x: ast.literal_eval(x))
+        # Cast columns to lists to prevents pandas from converting them to strings
+        list_columns = ['state', 'next_state', 'q_state', 'q_next_state']
+        for column in list_columns:
+            self.df[column] = self.df[column].apply(lambda x: ast.literal_eval(x))
 
     def add_to_buffer(self, state, next_state, q_state, q_next_state, reward, action, done):
         row = {"state": state, "next_state": next_state, "q_state": q_state,

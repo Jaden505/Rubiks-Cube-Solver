@@ -26,8 +26,9 @@ class DqnAgent:
         self.target_model = clone_model(self.model)
         self.update_target_model()
 
+        # Temperature for Boltzmann exploration: higher temperature means more exploration
         self.temp = 1.0
-        self.temp_decay = 0.99
+        self.temp_decay = 0.992
         self.temp_min = 0.01
 
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
@@ -43,14 +44,17 @@ class DqnAgent:
         """
         input_layer = Input(shape=(54, 6))
         x = Flatten()(input_layer)
-        x = Dense(32, activation="relu")(x)
+        x = Dense(512, activation="relu")(x)
         x = Dropout(0.2)(x)
-        x = Dense(64, activation="relu")(x)
+        x = Dense(512, activation="relu")(x)
         x = Dropout(0.2)(x)
+        x = Dense(256, activation="relu")(x)
+        x = Dropout(0.2)(x)
+        x = Dense(128, activation="relu")(x)
         output_layer = Dense(12, activation='softmax')(x)
 
         self.model = Model(inputs=input_layer, outputs=output_layer)
-        self.model.compile(optimizer=Adam(learning_rate=0.001), loss='categorical_crossentropy', metrics=['mse'])
+        self.model.compile(optimizer=Adam(learning_rate=0.0002), loss='categorical_crossentropy', metrics=['mse'])
 
     def policy(self, state, model, get_index=False):
         """
@@ -80,7 +84,7 @@ class DqnAgent:
         max_next_q = np.amax(q_next_state, axis=1)
 
         for i in range(state_batch.shape[0]):
-            reward = (reward_batch[i] + (0.95 * max_next_q[i])) / 2.95
+            reward = (reward_batch[i] + (0.95 * max_next_q[i]))
             target_q[i][action_batch[i]] = reward
 
         self.model.fit(x=state_batch, y=target_q)
