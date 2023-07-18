@@ -83,11 +83,6 @@ class DqnAgent:
         prediction_array = model.predict(np.array([state]), verbose=0)
         prediction_index = np.argmax(prediction_array)
 
-        # if prediction_index == self.prev_pred:
-        #     print(prediction_index)
-        #
-        # self.prev_pred = prediction_index
-
         if get_index:
             return prediction_index
 
