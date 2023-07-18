@@ -11,9 +11,9 @@ class Main:
         self.agent = DqnAgent()
         self.buffer = ReplayBuffer()
 
-        self.STEPS = 200
+        self.STEPS = 20
         self.BATCH_SIZE = 156
-        self.TARGET_UPDATE = 15
+        self.TARGET_UPDATE = 5
         self.UPDATE_ALL_TD = 5
 
     def train_model(self):
@@ -42,9 +42,6 @@ class Main:
             next_state, reward, done = self.cube.step(self.agent.rotation_dict[action])
             _, q_next_state = self.agent.boltzmann_exploration(self.agent.one_hot_encode(next_state), self.agent.target_model)
             td_error = abs(reward + (0.95 * max(q_next_state)) - q_state[action])
-
-            print("ACTION: ", action)
-            print("STATE: ", state)
 
             self.buffer.add_to_buffer(state, next_state, q_state, q_next_state, reward, action, done, td_error, ohe_state)
             state = copy.deepcopy(next_state)
