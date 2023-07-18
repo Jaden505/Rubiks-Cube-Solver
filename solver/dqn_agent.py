@@ -3,13 +3,12 @@ import copy
 import replay_buffer as rb
 
 import numpy as np
-import random
 
 from keras.models import clone_model
 from keras.models import Model
 from keras.layers import *
 from keras.optimizers import Adam
-
+from keras.initializers.initializers_v2 import GlorotUniform
 
 class DqnAgent:
     """
@@ -44,17 +43,38 @@ class DqnAgent:
         """
         input_layer = Input(shape=(54, 6))
         x = Flatten()(input_layer)
-        x = Dense(512, activation="relu")(x)
+        x = Dense(512, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
         x = Dropout(0.2)(x)
-        x = Dense(512, activation="relu")(x)
+
+        x = Dense(512, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
         x = Dropout(0.2)(x)
-        x = Dense(256, activation="relu")(x)
+
+        x = Dense(256, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
         x = Dropout(0.2)(x)
-        x = Dense(128, activation="relu")(x)
+
+        x = Dense(256, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = Dropout(0.2)(x)
+
+        x = Dense(128, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+
+        x = Dense(128, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+
         output_layer = Dense(12, activation='softmax')(x)
 
         self.model = Model(inputs=input_layer, outputs=output_layer)
-        self.model.compile(optimizer=Adam(learning_rate=0.0002), loss='categorical_crossentropy', metrics=['mse'])
+        self.model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mse'])
 
     def policy(self, state, model, get_index=False):
         """
@@ -103,7 +123,7 @@ class DqnAgent:
     def boltzmann_exploration(self, ohe_state, model):
         """
         Input is a list of One-hot encoded values for each action
-        Output is an action that should be taken
+        Output is an action that should be taken and the Q-values for each action
         """
         q_state = model.predict(np.array([ohe_state]), verbose=0).tolist()[0]
         prob_values = self._softmax(np.array(q_state) / self.temp)
