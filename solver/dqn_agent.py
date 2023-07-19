@@ -27,7 +27,7 @@ class DqnAgent:
 
         # Temperature for Boltzmann exploration: higher temperature means more exploration
         self.temp = 1.0
-        self.temp_decay = 0.992
+        self.temp_decay = 0.99
         self.temp_min = 0.01
 
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
@@ -74,7 +74,7 @@ class DqnAgent:
         output_layer = Dense(12, activation='softmax')(x)
 
         self.model = Model(inputs=input_layer, outputs=output_layer)
-        self.model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mse'])
+        self.model.compile(optimizer=Adam(learning_rate=0.002), loss='categorical_crossentropy', metrics=['accuracy'])
 
     def policy(self, state, model, get_index=False):
         """
@@ -92,17 +92,13 @@ class DqnAgent:
         """
         Trains the model using the batch of data
         """
-        state_batch, next_state_batch, q_state, q_next_state, reward_batch, action_batch, done_batch = list(batch.values())
+        state_batch, _, _, _, reward_batch, action_batch, _ = list(batch.values())
         state_batch = np.array([DqnAgent.one_hot_encode(state) for state in state_batch])
 
-        target_q = np.array(q_state)
-        max_next_q = np.amax(q_next_state, axis=1)
+        target = np.zeros((len(action_batch), 12))
+        target[np.arange(len(action_batch)), action_batch] = reward_batch
 
-        for i in range(state_batch.shape[0]):
-            reward = (reward_batch[i] + (0.95 * max_next_q[i]))
-            target_q[i][action_batch[i]] = reward
-
-        self.model.fit(x=state_batch, y=target_q)
+        self.model.fit(x=state_batch, y=target, verbose=1)
         self.temp = max(self.temp * self.temp_decay, self.temp_min)
 
     @staticmethod

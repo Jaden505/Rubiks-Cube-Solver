@@ -11,9 +11,9 @@ class Main:
         self.agent = DqnAgent()
         self.buffer = ReplayBuffer()
 
-        self.STEPS = 20
-        self.BATCH_SIZE = 156
-        self.TARGET_UPDATE = 5
+        self.STEPS = 150
+        self.BATCH_SIZE = 64
+        self.TARGET_UPDATE = 15
         self.UPDATE_ALL_TD = 5
 
     def train_model(self):
@@ -30,7 +30,7 @@ class Main:
             if step % self.TARGET_UPDATE == 0:
                 self.agent.update_target_model()
 
-        self.agent.model.save("../models/model.h5")
+        self.agent.model.save("../models/model1.h5")
 
     def get_train_data(self):
         self.cube.scramble()

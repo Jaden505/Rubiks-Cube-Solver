@@ -37,11 +37,12 @@ class CubeHelper(RubiksCube):
         :return reward between 0 and 1
         """
         reward = 0
-        for face in state:
+        for ind, face in enumerate(state):
             face = [x for y in face for x in y]  # Flatten list
-            reward += max([face.count(x) for x in self.colors])  # Get max count of each color
+            face_color = self.colors[ind]
+            reward += face.count(face_color)
 
-        return reward
+        return reward / 54
 
     def check_solved(self):
         state = np.array(self.get_cube_state())
@@ -56,7 +57,7 @@ class CubeHelper(RubiksCube):
         self.rotate(action)
 
         next_state = copy.deepcopy(self.get_cube_state())
-        reward = CubeHelper.reward_distance_penalty(state, next_state)
+        reward = self.reward_action(state, next_state)
         done = self.check_solved()
 
         return next_state, reward, done
@@ -64,31 +65,14 @@ class CubeHelper(RubiksCube):
     def reward_action(self, state, next_state):
         reward = self.reward_color_count(next_state) - self.reward_color_count(state)
 
+        if reward > 0:
+            reward *= 2
+
         solved_face = 0
         if (self.reward_face_solved(state, next_state) / 6) > 0:
-            solved_face = 1
+            solved_face = 10
 
-        return (reward / 12) + solved_face  # reward between 0 and 2
-
-    @staticmethod
-    def reward_distance_penalty(state, next_state):
-        """
-        Calculate the reward for the current action based on distance to the solved state and penalties for illegal moves
-        :return reward between -1 and 1
-        """
-        solved_state = np.array([[color] * 3 for color in range(6)])  # Solved state representation
-
-        # Calculate the distance to the solved state
-        distance = np.sum(state != solved_state) - np.sum(next_state != solved_state)
-
-        # Calculate penalties for illegal moves
-        illegal_move_penalty = 0
-        if distance == 0:
-            illegal_move_penalty = -0.5  # Penalize illegal moves that don't lead to a closer state
-
-        reward = distance / (6 * 9) + illegal_move_penalty
-
-        return reward
+        return reward + solved_face
 
     def reset(self):
         self.__init__()
@@ -98,3 +82,6 @@ class CubeHelper(RubiksCube):
 if __name__ == "__main__":
     cube = CubeHelper()
     cube.scramble()
+    print(cube.get_cube_state())
+
+
