@@ -27,7 +27,7 @@ class DqnAgent:
 
         # Temperature for Boltzmann exploration: higher temperature means more exploration
         self.temp = 1.0
-        self.temp_decay = 0.98
+        self.temp_decay = 0.99
         self.temp_min = 0.01
 
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
@@ -43,38 +43,19 @@ class DqnAgent:
         """
         input_layer = Input(shape=(54, 6))
         x = Flatten()(input_layer)
-        x = Dense(512, kernel_initializer=GlorotUniform())(x)
-        x = BatchNormalization()(x)
-        x = Activation('relu')(x)
-        x = Dropout(0.2)(x)
-
-        x = Dense(512, kernel_initializer=GlorotUniform())(x)
-        x = BatchNormalization()(x)
-        x = Activation('relu')(x)
-        x = Dropout(0.2)(x)
-
         x = Dense(256, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
         x = Activation('relu')(x)
-        x = Dropout(0.2)(x)
-
-        x = Dense(256, kernel_initializer=GlorotUniform())(x)
-        x = BatchNormalization()(x)
-        x = Activation('relu')(x)
-        x = Dropout(0.2)(x)
+        x = Dropout(0.3)(x)
 
         x = Dense(128, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
         x = Activation('relu')(x)
-
-        x = Dense(128, kernel_initializer=GlorotUniform())(x)
-        x = BatchNormalization()(x)
-        x = Activation('relu')(x)
-
+        x = Dropout(0.3)(x)
         output_layer = Dense(12, activation='softmax')(x)
 
         self.model = Model(inputs=input_layer, outputs=output_layer)
-        self.model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mse'])
+        self.model.compile(optimizer=Adam(learning_rate=0.0003), loss='mean_squared_error', metrics=['accuracy'])
 
     def policy(self, state, model, get_index=False):
         """

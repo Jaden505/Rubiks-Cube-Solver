@@ -11,10 +11,10 @@ class Main:
         self.agent = DqnAgent()
         self.buffer = ReplayBuffer()
 
-        self.STEPS = 120
-        self.BATCH_SIZE = 64
-        self.TARGET_UPDATE = 10
-        self.UPDATE_ALL_TD = 5
+        self.STEPS = 5000
+        self.BATCH_SIZE = 256
+        self.TARGET_UPDATE = 5
+        self.UPDATE_ALL_TD = 2
 
     def train_model(self):
         for step in range(self.STEPS):

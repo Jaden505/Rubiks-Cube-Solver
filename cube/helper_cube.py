@@ -76,7 +76,7 @@ class CubeHelper(RubiksCube):
         solved_face = 0
 
         if reward > 0:
-            reward *= 8
+            reward *= 5
 
         if (self.reward_face_solved(state, next_state) / 6) > 0:
             solved_face = 10
@@ -85,6 +85,17 @@ class CubeHelper(RubiksCube):
             solved_face = 100
 
         return reward + solved_face
+
+    # def reward_action(self, state, next_state):
+    #     reward = self.reward_color_count(next_state) - self.reward_color_count(state)
+    #
+    #     if (self.reward_face_solved(state, next_state) / 6) > 0:
+    #         reward = max(reward + 0.3, 1)
+    #
+    #     if self.check_solved():
+    #         reward = 1
+    #
+    #     return reward
 
     def reset(self):
         self.__init__()
