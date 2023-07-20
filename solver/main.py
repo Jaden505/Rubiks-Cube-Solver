@@ -11,9 +11,9 @@ class Main:
         self.agent = DqnAgent()
         self.buffer = ReplayBuffer()
 
-        self.STEPS = 150
+        self.STEPS = 120
         self.BATCH_SIZE = 64
-        self.TARGET_UPDATE = 15
+        self.TARGET_UPDATE = 10
         self.UPDATE_ALL_TD = 5
 
     def train_model(self):
@@ -37,14 +37,30 @@ class Main:
         state = copy.deepcopy(self.cube.get_cube_state())
 
         for i in range(self.BATCH_SIZE):
-            ohe_state = self.agent.one_hot_encode(state)
-            action, q_state = self.agent.boltzmann_exploration(ohe_state, self.agent.model)
-            next_state, reward, done = self.cube.step(self.agent.rotation_dict[action])
-            _, q_next_state = self.agent.boltzmann_exploration(self.agent.one_hot_encode(next_state), self.agent.target_model)
-            td_error = abs(reward + (0.95 * max(q_next_state)) - q_state[action])
+            if i % 10 == 0:
+                self.cube.reset()
+                state, action_to_solve = self.cube.excluded_face_scramble()
+                action_index = next((key for key, value in self.agent.rotation_dict.items() if value == action_to_solve), None)
+                ohe_state = self.agent.one_hot_encode(state)
 
-            self.buffer.add_to_buffer(state, next_state, q_state, q_next_state, reward, action, done, td_error, ohe_state)
-            state = copy.deepcopy(next_state)
+                _, q_state = self.agent.boltzmann_exploration(ohe_state, self.agent.model)
+                next_state, reward, done = self.cube.step(action_to_solve)
+                _, q_next_state = self.agent.boltzmann_exploration(self.agent.one_hot_encode(next_state), self.agent.target_model)
+                td_error = abs(reward + (0.95 * max(q_next_state)) - q_state[action_index])
+
+                self.buffer.add_to_buffer(state, next_state, q_state, q_next_state, reward, action_index, done, td_error, ohe_state)
+                self.cube.scramble()
+                state = copy.deepcopy(self.cube.get_cube_state())
+
+            else:
+                ohe_state = self.agent.one_hot_encode(state)
+                action, q_state = self.agent.boltzmann_exploration(ohe_state, self.agent.model)
+                next_state, reward, done = self.cube.step(self.agent.rotation_dict[action])
+                _, q_next_state = self.agent.boltzmann_exploration(self.agent.one_hot_encode(next_state), self.agent.target_model)
+                td_error = abs(reward + (0.95 * max(q_next_state)) - q_state[action])
+
+                self.buffer.add_to_buffer(state, next_state, q_state, q_next_state, reward, action, done, td_error, ohe_state)
+                state = copy.deepcopy(next_state)
 
 
 if __name__ == "__main__":

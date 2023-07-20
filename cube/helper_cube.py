@@ -10,6 +10,15 @@ class CubeHelper(RubiksCube):
     def __init__(self):
         super().__init__()
 
+        self.non_effecting_rotations = {
+            "F": ["F", "B"],
+            "B": ["B", "F"],
+            "U": ["U", "D"],
+            "D": ["D", "U"],
+            "R": ["R", "L"],
+            "L": ["L", "R"]
+        }
+
     def scramble(self):
         for _ in range(100):
             self.rotate(random.choice(self.cube_rotations))
@@ -64,13 +73,16 @@ class CubeHelper(RubiksCube):
 
     def reward_action(self, state, next_state):
         reward = self.reward_color_count(next_state) - self.reward_color_count(state)
+        solved_face = 0
 
         if reward > 0:
-            reward *= 2
+            reward *= 8
 
-        solved_face = 0
         if (self.reward_face_solved(state, next_state) / 6) > 0:
             solved_face = 10
+
+        if self.check_solved():
+            solved_face = 100
 
         return reward + solved_face
 
@@ -78,10 +90,26 @@ class CubeHelper(RubiksCube):
         self.__init__()
         return self.get_cube_state()
 
+    def excluded_face_scramble(self):
+        """
+        Scrambles all nodes on the cube except for one face that will stay the same.
+        :return: the face that was scrambled without one face except for 1 move on that face,
+                also the action that needs to be taken to solve that face
+        """
+        fixed_face = random.choice(self.faces)
+
+        for i in range(10):
+            rotation = random.choice(self.non_effecting_rotations[fixed_face])
+            self.rotate(rotation)
+
+        effected_faces = [x for x in self.faces if x not in self.non_effecting_rotations[fixed_face]]
+        random_effecting_action = random.choice(effected_faces) + random.choice(["", "'"])
+        self.rotate(random_effecting_action)
+        state = copy.deepcopy(self.get_cube_state())
+
+        return state, random_effecting_action
+
 
 if __name__ == "__main__":
     cube = CubeHelper()
-    cube.scramble()
-    print(cube.get_cube_state())
-
-
+    cube.excluded_face_scramble()

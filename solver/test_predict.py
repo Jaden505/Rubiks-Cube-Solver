@@ -6,10 +6,10 @@ import copy
 
 cube = CubeHelper()
 agent = DqnAgent()
-model = load_model('../models/model.0.1.h5')
+model = load_model('../models/model1.h5')
 
 agent.model = model
-
+[]
 def try_solve():
     cube.scramble()
     state = cube.get_cube_state()
