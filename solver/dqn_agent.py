@@ -9,6 +9,7 @@ from keras.models import Model
 from keras.layers import *
 from keras.optimizers import Adam
 from keras.initializers.initializers_v2 import GlorotUniform
+from keras.metrics import MeanAbsoluteError, RootMeanSquaredError
 
 class DqnAgent:
     """
@@ -55,7 +56,8 @@ class DqnAgent:
         output_layer = Dense(12, activation='softmax')(x)
 
         self.model = Model(inputs=input_layer, outputs=output_layer)
-        self.model.compile(optimizer=Adam(learning_rate=0.0003), loss='mean_squared_error', metrics=['accuracy'])
+        self.model.compile(optimizer=Adam(learning_rate=0.0003), loss='mean_squared_error',
+                           metrics=['accuracy', MeanAbsoluteError(), RootMeanSquaredError()])
 
     def policy(self, state, model, get_index=False):
         """

@@ -11,8 +11,8 @@ class Main:
         self.agent = DqnAgent()
         self.buffer = ReplayBuffer()
 
-        self.STEPS = 5000
-        self.BATCH_SIZE = 256
+        self.STEPS = 500
+        self.BATCH_SIZE = 96
         self.TARGET_UPDATE = 5
         self.UPDATE_ALL_TD = 2
 
