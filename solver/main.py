@@ -3,7 +3,8 @@ from solver.dqn_agent import DqnAgent
 from solver.replay_buffer import ReplayBuffer
 
 import copy
-
+from keras.models import load_model
+from keras.models import clone_model
 
 class Main:
     def __init__(self):
@@ -11,10 +12,17 @@ class Main:
         self.agent = DqnAgent()
         self.buffer = ReplayBuffer()
 
-        self.STEPS = 5000
-        self.BATCH_SIZE = 256
+        self.STEPS = 600
+        self.BATCH_SIZE = 128
         self.TARGET_UPDATE = 5
         self.UPDATE_ALL_TD = 2
+
+        self.MODEL_SAVE_FREQ = 10
+        self.model_save_path = "../models/latest_model2.keras"
+
+        self.agent.model = load_model(self.model_save_path)
+        self.agent.target_model = clone_model(self.agent.model)
+        self.agent.temp = 0.6
 
     def train_model(self):
         for step in range(self.STEPS):
@@ -30,7 +38,10 @@ class Main:
             if step % self.TARGET_UPDATE == 0:
                 self.agent.update_target_model()
 
-        self.agent.model.save("../models/model1.h5")
+            if step % self.MODEL_SAVE_FREQ == 0:
+                self.agent.model.save(self.model_save_path)
+
+        self.agent.model.save(self.model_save_path)
 
     def get_train_data(self):
         self.cube.scramble()

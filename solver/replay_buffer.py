@@ -1,6 +1,7 @@
 import pandas as pd
 import ast
 import numpy as np
+from tensorflow import convert_to_tensor
 
 class ReplayBuffer:
     def __init__(self, max_size=5000):
@@ -41,14 +42,14 @@ class ReplayBuffer:
         Update the TD errors of the most recent experiences
         """
         self.df = self.df.reset_index(drop=True)
-        experiences = self.df.tail(batch_size)  # Get the mosts recent experiences
+        experiences = self.df.tail(batch_size)  # Get the most recent experiences
 
-        ohe_states = np.vstack(experiences['ohe_state'])
+        ohe_states = np.stack(experiences['ohe_state'].tolist(), axis=0)
         actions = experiences['action'].astype('int32')
         rewards = experiences['reward'].astype('float32')
 
-        current_q_values = model.predict(np.array([ohe_states]), verbose=0)
-        next_q_values = target_model.predict(np.array([ohe_states]), verbose=0)
+        current_q_values = model.predict(ohe_states, verbose=0)
+        next_q_values = target_model.predict(ohe_states, verbose=0)
 
         # Calculate the new TD errors
         td_errors = np.abs(

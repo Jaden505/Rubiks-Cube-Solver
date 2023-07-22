@@ -8,7 +8,8 @@ from keras.models import clone_model
 from keras.models import Model
 from keras.layers import *
 from keras.optimizers import Adam
-from keras.initializers.initializers_v2 import GlorotUniform
+from keras.initializers import GlorotUniform
+from keras.metrics import MeanAbsoluteError, RootMeanSquaredError
 
 class DqnAgent:
     """
@@ -33,8 +34,6 @@ class DqnAgent:
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
                               6: "R", 7: "R'", 8: "F", 9: "F'", 10: "B", 11: "B'"}
 
-        # self.prev_pred = None
-
     def create_model(self):
         """
         Creates the model for the neural network
@@ -55,7 +54,7 @@ class DqnAgent:
         output_layer = Dense(12, activation='softmax')(x)
 
         self.model = Model(inputs=input_layer, outputs=output_layer)
-        self.model.compile(optimizer=Adam(learning_rate=0.0003), loss='mean_squared_error', metrics=['accuracy'])
+        self.model.compile(optimizer=Adam(learning_rate=0.0003), loss='', metrics=['accuracy', MeanAbsoluteError(), RootMeanSquaredError()])
 
     def policy(self, state, model, get_index=False):
         """
@@ -93,6 +92,9 @@ class DqnAgent:
         Input is a 6x3x3 array of the Rubik's cube
         Output is a one-hot encoded array of the Rubik's cube of shape 54x6
         """
+        state = np.array(state)
+        assert state.shape == (6, 3, 3), f"Unexpected state shape: {state.shape}"
+        assert np.all((state >= 0) & (state < 6)), f"State contains invalid values: {state}"
         flat_state = np.array(state).flatten()
         one_hot_identity = np.eye(6)
         return one_hot_identity[flat_state.astype(int)]
