@@ -1,6 +1,6 @@
 from cube.helper_cube import CubeHelper
-from solver.dqn_agent import DqnAgent
-from solver.replay_buffer import ReplayBuffer
+from dqn.dqn_agent import DqnAgent
+from dqn.replay_buffer import ReplayBuffer
 
 import copy
 
@@ -16,6 +16,8 @@ class Main:
         self.TARGET_UPDATE = 5
         self.UPDATE_ALL_TD = 2
 
+        self.model_save_path = "../models/model.h5"
+
     def train_model(self):
         for step in range(self.STEPS):
             self.get_train_data()
@@ -29,8 +31,9 @@ class Main:
 
             if step % self.TARGET_UPDATE == 0:
                 self.agent.update_target_model()
+                self.agent.model.save(self.model_save_path)
 
-        self.agent.model.save("../models/model1.h5")
+        self.agent.model.save(self.model_save_path)
 
     def get_train_data(self):
         self.cube.scramble()

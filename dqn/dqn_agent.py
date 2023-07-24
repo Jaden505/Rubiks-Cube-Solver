@@ -34,8 +34,6 @@ class DqnAgent:
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
                               6: "R", 7: "R'", 8: "F", 9: "F'", 10: "B", 11: "B'"}
 
-        # self.prev_pred = None
-
     def create_model(self):
         """
         Creates the model for the neural network
