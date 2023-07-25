@@ -45,6 +45,9 @@ class PPOAgent:
             old_probs = probs.numpy()
             old_probs = old_probs + 1e-10
             ratios = probs / old_probs
+            advantages = tf.expand_dims(advantages, axis=1)
+            ratios = tf.cast(ratios, tf.float32)
+            advantages = tf.cast(advantages, tf.float32)
             surr1 = ratios * advantages
             surr2 = tf.clip_by_value(ratios, 1 - self.clip_ratio, 1 + self.clip_ratio) * advantages
             actor_loss = -tf.reduce_mean(tf.minimum(surr1, surr2))
@@ -59,8 +62,9 @@ class PPOAgent:
         self.critic_optimizer.apply_gradients(zip(grads_critic, self.critic.trainable_variables))
 
     def get_gae(self, rewards, states, next_states, dones):
-        values = self.critic(states)
-        next_values = self.critic(next_states)
+        """Calculate the Generalized Advantage Estimation (GAE)"""
+        values = self.critic(states).numpy().squeeze()
+        next_values = self.critic(next_states).numpy().squeeze()
 
         returns = np.zeros_like(rewards)
         gae = 0
