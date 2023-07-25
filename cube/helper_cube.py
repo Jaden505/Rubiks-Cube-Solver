@@ -67,43 +67,24 @@ class CubeHelper(RubiksCube):
 
         next_state = copy.deepcopy(self.get_cube_state())
         reward = self.reward_action(state, next_state)
-        done = 1 if self.check_solved() else 0
+        done = self.check_solved()
 
         return next_state, reward, done
 
-    # def reward_action(self, state, next_state):
-    #     reward = self.reward_color_count(next_state) - self.reward_color_count(state)
-    #     solved_face = 0
-    #
-    #     if reward > 0:
-    #         reward *= 5
-    #
-    #     if (self.reward_face_solved(state, next_state) / 6) > 0:
-    #         solved_face = 10
-    #
-    #     if self.check_solved():
-    #         solved_face = 100
-    #
-    #     return reward + solved_face
-
     def reward_action(self, state, next_state):
-        reward = self.reward_color_count(next_state) - self.reward_color_count(state)
+        reward = (self.reward_color_count(next_state) - self.reward_color_count(state))
 
-        if (self.reward_face_solved(state, next_state)) > 0:
-            reward = max(reward + 0.4, 1)
+        if reward < 0:
+            reward = 0
+
+        if self.reward_face_solved(state, next_state) > 0:
+            print('Solved face!')
+            reward += self.reward_face_solved(state, next_state)
 
         if self.check_solved():
-            reward = 1
+            reward += 6
 
         return reward
-
-    # def reward_action(self, state, next_state):
-    #     reward = CubeHelper.reward_face_solved(state, next_state) / 6
-    #
-    #     if self.check_solved():
-    #         reward = 10
-    #
-    #     return reward
 
     def reset(self):
         self.__init__()
@@ -122,13 +103,16 @@ class CubeHelper(RubiksCube):
             self.rotate(rotation)
 
         effected_faces = [x for x in self.faces if x not in self.non_effecting_rotations[fixed_face]]
-        random_effecting_action = random.choice(effected_faces) + random.choice(["", "'"])
+        counter = random.choice(["", "'"])
+        random_effecting_action = random.choice(effected_faces) + counter
+        solving_action = random_effecting_action + "'" if counter == "" else random_effecting_action
+
         self.rotate(random_effecting_action)
         state = copy.deepcopy(self.get_cube_state())
 
-        return state, random_effecting_action
+        return state, solving_action
 
 
 if __name__ == "__main__":
     cube = CubeHelper()
-    cube.excluded_face_scramble()
+

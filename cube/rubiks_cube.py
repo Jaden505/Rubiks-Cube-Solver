@@ -1,3 +1,5 @@
+import copy
+
 class RubiksCube:
     def __init__(self):
         self.cube = {}
@@ -15,6 +17,8 @@ class RubiksCube:
 
         for i in range(6):
             self.cube[self.faces[i]] = [[self.colors[i] for _ in range(3)] for _ in range(3)]
+
+        self.solved_state = copy.deepcopy(self.cube)
 
     def rotate_rows(self, affected_cubes, position):
         """

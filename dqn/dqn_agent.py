@@ -44,12 +44,12 @@ class DqnAgent:
         x = Flatten()(input_layer)
         x = Dense(256, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
+        x = Activation('elu')(x)
         x = Dropout(0.3)(x)
 
         x = Dense(128, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
+        x = Activation('elu')(x)
         x = Dropout(0.3)(x)
         output_layer = Dense(12, activation='softmax')(x)
 

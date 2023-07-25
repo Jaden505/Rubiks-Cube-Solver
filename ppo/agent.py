@@ -1,7 +1,8 @@
 import tensorflow as tf
 from keras.models import Model
-from keras.layers import Dense, Input
+from keras.layers import Dense, Input, Flatten, BatchNormalization, Activation, Dropout
 import numpy as np
+from keras.initializers.initializers_v2 import GlorotUniform
 
 class PPOAgent:
     def __init__(self, state_dim, action_dim, gamma=0.99, clip_ratio=0.2, learning_rate=3e-4):
@@ -18,22 +19,38 @@ class PPOAgent:
 
     def build_actor(self):
         states = Input(shape=(self.state_dim,))
-        x = Dense(256, activation='relu')(states)
-        x = Dense(256, activation='relu')(x)
+        x = Flatten()(states)
+        x = Dense(256, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = Dropout(0.3)(x)
+
+        x = Dense(128, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = Dropout(0.3)(x)
         probs = Dense(self.action_dim, activation='softmax')(x)
 
         return Model(inputs=states, outputs=probs)
 
     def build_critic(self):
         states = Input(shape=(self.state_dim,))
-        x = Dense(256, activation='relu')(states)
-        x = Dense(256, activation='relu')(x)
+        x = Flatten()(states)
+        x = Dense(256, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = Dropout(0.3)(x)
+
+        x = Dense(128, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = Dropout(0.3)(x)
         values = Dense(1)(x)
 
         return Model(inputs=states, outputs=values)
 
     def get_action(self, state):
-        probabilities = self.actor.predict(state)
+        probabilities = self.actor.predict(state, verbose=0)
         action = np.random.choice(self.action_dim, p=probabilities[0])
         return action
 
@@ -44,16 +61,16 @@ class PPOAgent:
             probs = self.actor(states, training=True)
             old_probs = probs.numpy()
             old_probs = old_probs + 1e-10
-            ratios = probs / old_probs
-            advantages = tf.expand_dims(advantages, axis=1)
-            ratios = tf.cast(ratios, tf.float32)
-            advantages = tf.cast(advantages, tf.float32)
+            ratios = tf.cast(probs / old_probs, tf.float32)
+            advantages = tf.cast(tf.expand_dims(advantages, axis=1), tf.float32)
             surr1 = ratios * advantages
             surr2 = tf.clip_by_value(ratios, 1 - self.clip_ratio, 1 + self.clip_ratio) * advantages
             actor_loss = -tf.reduce_mean(tf.minimum(surr1, surr2))
 
             values = self.critic(states, training=True)
             critic_loss = tf.reduce_mean(tf.square(returns - values))
+
+        print(f"Actor Loss: {actor_loss}, Critic Loss: {critic_loss}")
 
         grads_actor = tape1.gradient(actor_loss, self.actor.trainable_variables)
         grads_critic = tape2.gradient(critic_loss, self.critic.trainable_variables)
