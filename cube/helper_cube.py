@@ -19,8 +19,8 @@ class CubeHelper(RubiksCube):
             "L": ["L", "R"]
         }
 
-    def scramble(self):
-        for _ in range(100):
+    def scramble(self, scramble_length=100):
+        for _ in range(scramble_length):
             self.rotate(random.choice(self.cube_rotations))
 
     def get_cube_state(self):
@@ -57,34 +57,35 @@ class CubeHelper(RubiksCube):
         state = np.array(self.get_cube_state())
         return np.all(state == state[:, 0, 0][:, None, None], axis=(1, 2)).all()
 
-    def step(self, action):
+    def step(self, action, moves_since_scramble, scramble_length):
         """
         Rotate the cube and return the next state, reward and if the cube is solved
         """
         state = copy.deepcopy(self.get_cube_state())
-
         self.rotate(action)
 
         next_state = copy.deepcopy(self.get_cube_state())
-        reward = self.reward_action(state, next_state)
+        reward = self.reward_action(state, next_state, moves_since_scramble, scramble_length)
         done = self.check_solved()
 
         return next_state, reward, done
 
-    def reward_action(self, state, next_state):
+    def reward_action(self, state, next_state, moves_since_scramble, scramble_length):
         reward = (self.reward_color_count(next_state) - self.reward_color_count(state))
 
         if reward < 0:
             reward = 0
 
         if self.reward_face_solved(state, next_state) > 0:
-            print('Solved face!')
             reward += self.reward_face_solved(state, next_state)
 
         if self.check_solved():
+            print('Solved cube!')
             reward += 6
 
-        return reward
+        move_penalty = 0.1 * (moves_since_scramble / scramble_length)
+
+        return reward - move_penalty
 
     def reset(self):
         self.__init__()

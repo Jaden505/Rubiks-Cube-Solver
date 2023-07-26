@@ -3,7 +3,7 @@ import ast
 import numpy as np
 
 class ReplayBuffer:
-    def __init__(self, max_size=5000):
+    def __init__(self, max_size=15000):
         self.df = pd.DataFrame(columns=["state", "next_state", "q_state", "q_next_state",
                                         "reward", "action", "done", "td_error", "ohe_state"])
 

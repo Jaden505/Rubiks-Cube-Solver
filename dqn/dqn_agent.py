@@ -28,7 +28,7 @@ class DqnAgent:
 
         # Temperature for Boltzmann exploration: higher temperature means more exploration
         self.temp = 1.0
-        self.temp_decay = 0.99
+        self.temp_decay = 0.997
         self.temp_min = 0.01
 
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
@@ -80,7 +80,7 @@ class DqnAgent:
         max_next_q = np.amax(q_next_state, axis=1)
 
         for i in range(state_batch.shape[0]):
-            reward = (reward_batch[i] + (0.95 * max_next_q[i]))
+            reward = (reward_batch[i] + (0.99 * max_next_q[i]))
             target_q[i][action_batch[i]] = reward
 
         self.model.fit(x=state_batch, y=target_q, epochs=10)

@@ -6,17 +6,20 @@ import copy
 
 cube = CubeHelper()
 agent = DqnAgent()
-model = load_model('../models/model.h5')
+model = load_model('../models/dqn/model.h5')
 
 agent.model = model
+
+
 def try_solve():
-    cube.scramble()
-    state = cube.get_cube_state()
+    scramble_length = 5
+    cube.scramble(scramble_length)
+    state = copy.deepcopy(cube.get_cube_state())
 
     for i in range(1000):
         ohe_state = agent.one_hot_encode(state)
         action, q_state = agent.boltzmann_exploration(ohe_state, agent.model)
-        next_state, reward, done = cube.step(agent.rotation_dict[action])
+        next_state, reward, done = cube.step(agent.rotation_dict[action], i, scramble_length)
 
         state = copy.deepcopy(next_state)
 
@@ -26,6 +29,13 @@ def try_solve():
 
         if done:
             print("Solved!")
+            print("Steps: ", i)
             break
+
+        if i % scramble_length == 0:
+            cube.reset()
+            cube.scramble(scramble_length)
+            state = copy.deepcopy(cube.get_cube_state())
+
 
 try_solve()
