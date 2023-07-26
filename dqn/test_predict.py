@@ -12,7 +12,7 @@ agent.model = model
 
 
 def try_solve():
-    scramble_length = 5
+    scramble_length = 6
     cube.scramble(scramble_length)
     state = copy.deepcopy(cube.get_cube_state())
 

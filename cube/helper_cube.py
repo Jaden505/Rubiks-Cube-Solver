@@ -73,17 +73,18 @@ class CubeHelper(RubiksCube):
     def reward_action(self, state, next_state, moves_since_scramble, scramble_length):
         reward = (self.reward_color_count(next_state) - self.reward_color_count(state))
 
-        if reward < 0:
-            reward = 0
+        # if reward < 0:
+        #     reward = 0
 
-        if self.reward_face_solved(state, next_state) > 0:
-            reward += self.reward_face_solved(state, next_state)
+        if self.reward_face_solved(state, next_state) != 0:
+            reward += self.reward_face_solved(state, next_state)/6
+            reward = max(reward, 1)
 
         if self.check_solved():
             print('Solved cube!')
-            reward += 6
+            reward = 1
 
-        move_penalty = 0.1 * (moves_since_scramble / scramble_length)
+        move_penalty = 0.4 * (moves_since_scramble / scramble_length)
 
         return reward - move_penalty
 

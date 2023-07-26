@@ -12,10 +12,10 @@ class Main:
         self.buffer = ReplayBuffer()
         self.agent = DqnAgent()
 
-        self.model_save_path = '../models/dqn/model.h5'
-        model = load_model(self.model_save_path)
-        self.agent.model = model
-        self.agent.target_model = clone_model(model)
+        self.model_save_path = '../models/dqn/model3_negative_rewards.h5'
+        # model = load_model(self.model_save_path)
+        # self.agent.model = model
+        # self.agent.target_model = clone_model(model)
 
         self.STEPS = 2000
         self.BATCH_SIZE = 96
@@ -41,7 +41,7 @@ class Main:
                 self.agent.update_target_model()
                 self.agent.model.save(self.model_save_path)
 
-            if self.scramble_length >= 20:
+            if self.scramble_length >= 25:
                 self.scramble_length = 2
 
         self.agent.model.save(self.model_save_path)
@@ -67,7 +67,7 @@ class Main:
             state = copy.deepcopy(next_state)
 
             if done:
-                if self.solved_count >= 15:
+                if self.solved_count >= 10:
                     self.scramble_length += 1
                     self.solved_count = 0
                 else:

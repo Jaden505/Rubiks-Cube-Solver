@@ -61,7 +61,7 @@ class Main:
             next_states.append(next_state)
             dones.append(done)
 
-            if done == 1:
+            if done:
                 self.cube.scramble()
                 state = copy.deepcopy(self.cube.get_cube_state())
             else:
