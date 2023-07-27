@@ -1,3 +1,4 @@
+import random
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import Dense, Input, Flatten, BatchNormalization, Activation, Dropout
@@ -5,10 +6,13 @@ import numpy as np
 from keras.initializers.initializers_v2 import GlorotUniform
 
 class PPOAgent:
-    def __init__(self, state_dim, action_dim, gamma=0.95, clip_ratio=0.2, learning_rate=3e-4):
+    def __init__(self, state_dim, action_dim, epsilon=0.8, epsilon_decay=0.995, epsilon_min=0.01, gamma=0.99, clip_ratio=0.15, learning_rate=3e-3):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
+        self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
+        self.epsilon_min = epsilon_min
         self.clip_ratio = clip_ratio
 
         self.actor = self.build_actor()
@@ -22,13 +26,18 @@ class PPOAgent:
         x = Flatten()(states)
         x = Dense(256, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
+        x = Activation('elu')(x)
         x = Dropout(0.3)(x)
 
         x = Dense(128, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
+        x = Activation('elu')(x)
         x = Dropout(0.3)(x)
+
+        x = Dense(128, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('elu')(x)
+
         probs = Dense(self.action_dim, activation='softmax')(x)
 
         return Model(inputs=states, outputs=probs)
@@ -54,8 +63,16 @@ class PPOAgent:
         return Model(inputs=states, outputs=values)
 
     def get_action(self, state):
-        probabilities = self.actor.predict(state, verbose=0)
-        action = np.random.choice(self.action_dim, p=probabilities[0])
+        if np.random.rand() < self.epsilon:  # exploration
+            action = np.random.choice(self.action_dim)
+        else:  # exploitation
+            probabilities = self.actor.predict(state, verbose=0)
+            action = np.argmax(probabilities[0])
+
+        # decay epsilon
+        if self.epsilon > self.epsilon_min and self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
+
         return action
 
     def train(self, states, actions, rewards, next_states, dones):

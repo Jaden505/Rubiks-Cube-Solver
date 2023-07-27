@@ -2,7 +2,7 @@ from cube.helper_cube import CubeHelper
 from agent import PPOAgent
 
 import numpy as np
-import copy
+from keras.models import load_model
 
 
 class Main:
@@ -10,13 +10,15 @@ class Main:
         self.cube = CubeHelper()
         self.agent = PPOAgent(state_dim=54, action_dim=12)
 
-        self.STEPS = 500
-        self.BATCH_SIZE = 256
+        self.STEPS = 100000
+        self.BATCH_SIZE = 64
 
         self.model_save_path = "../models/ppo/model.h5"
+        self.agent.actor = load_model(self.model_save_path + "_actor")
+        self.agent.critic = load_model(self.model_save_path + "_critic")
 
         self.solved_count = 0
-        self.scramble_length = 2
+        self.scramble_length = 8
 
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
                               6: "R", 7: "R'", 8: "F", 9: "F'", 10: "B", 11: "B'"}
@@ -33,6 +35,9 @@ class Main:
                 self.agent.critic.save(self.model_save_path + "_critic")
 
             print("Total reward: ", sum(rewards))
+
+            if self.scramble_length >= 25:
+                self.scramble_length = 2
 
         self.agent.actor.save(self.model_save_path + "_actor")
         self.agent.critic.save(self.model_save_path + "_critic")

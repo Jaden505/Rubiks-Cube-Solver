@@ -97,18 +97,20 @@ class CubeHelper(RubiksCube):
         return next_state, reward, done
 
     def reward_action(self, state, next_state):
-        reward = 10 * (self.reward_color_count(next_state) - self.reward_color_count(state))
-
-        solved_face = self.reward_face_solved(state, next_state)
-        reward += solved_face
+        color_count_reward = 4 * (self.reward_color_count(next_state) - self.reward_color_count(state))
+        solved_face_reward = self.reward_face_solved(state, next_state)
+        move_penalty = -0.05
 
         if self.check_solved():
             print('Solved cube!')
-            reward += 3
+            solved_cube_reward = 3
+        else:
+            solved_cube_reward = 0
 
-        move_penalty = -0.05
+        total_reward = color_count_reward + solved_face_reward + solved_cube_reward + move_penalty
+        total_reward = np.clip(total_reward, -1, 1)
 
-        return reward + move_penalty
+        return total_reward
 
 
 if __name__ == "__main__":
