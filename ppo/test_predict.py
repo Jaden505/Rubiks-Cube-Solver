@@ -3,7 +3,6 @@ from agent import PPOAgent
 from main import flatten_state
 
 from keras.models import load_model
-import copy
 import numpy as np
 
 cube = CubeHelper()

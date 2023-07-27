@@ -1,12 +1,12 @@
-import random
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import Dense, Input, Flatten, BatchNormalization, Activation, Dropout
 import numpy as np
 from keras.initializers.initializers_v2 import GlorotUniform
 
+
 class PPOAgent:
-    def __init__(self, state_dim, action_dim, epsilon=0.8, epsilon_decay=0.995, epsilon_min=0.01, gamma=0.99, clip_ratio=0.15, learning_rate=3e-3):
+    def __init__(self, state_dim, action_dim, epsilon=1.0, epsilon_decay=0.995, epsilon_min=0.01, gamma=0.99, clip_ratio=0.15, learning_rate=3e-3):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
