@@ -5,7 +5,7 @@ import numpy as np
 from keras.initializers.initializers_v2 import GlorotUniform
 
 class PPOAgent:
-    def __init__(self, state_dim, action_dim, gamma=0.99, clip_ratio=0.2, learning_rate=3e-4):
+    def __init__(self, state_dim, action_dim, gamma=0.95, clip_ratio=0.2, learning_rate=3e-4):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -38,13 +38,17 @@ class PPOAgent:
         x = Flatten()(states)
         x = Dense(256, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
-        x = Dropout(0.3)(x)
+        x = Activation('elu')(x)
+        x = Dropout(0.2)(x)
 
         x = Dense(128, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
-        x = Dropout(0.3)(x)
+        x = Activation('elu')(x)
+        x = Dropout(0.2)(x)
+
+        x = Dense(128, kernel_initializer=GlorotUniform())(x)
+        x = BatchNormalization()(x)
+        x = Activation('elu')(x)
         values = Dense(1)(x)
 
         return Model(inputs=states, outputs=values)
@@ -87,7 +91,7 @@ class PPOAgent:
         gae = 0
         for t in reversed(range(0, len(rewards))):
             delta = rewards[t] + self.gamma * next_values[t] * (1 - dones[t]) - values[t]
-            gae = delta + self.gamma * 0.95 * gae * (1 - dones[t])
+            gae = delta + self.gamma * 0.99 * gae * (1 - dones[t])
             returns[t] = gae + values[t]
 
         advantages = returns - values

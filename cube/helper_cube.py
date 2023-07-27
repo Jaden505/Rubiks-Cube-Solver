@@ -26,6 +26,36 @@ class CubeHelper(RubiksCube):
     def get_cube_state(self):
         return list(self.cube.values())
 
+    def check_solved(self):
+        state = np.array(self.get_cube_state())
+        return np.all(state == state[:, 0, 0][:, None, None], axis=(1, 2)).all()
+
+    def reset(self):
+        self.__init__()
+        return self.get_cube_state()
+
+    def excluded_face_scramble(self):
+        """
+        Scrambles all nodes on the cube except for one face that will stay the same.
+        :return: the face that was scrambled without one face except for 1 move on that face,
+                also the action that needs to be taken to solve that face
+        """
+        fixed_face = random.choice(self.faces)
+
+        for i in range(10):
+            rotation = random.choice(self.non_effecting_rotations[fixed_face])
+            self.rotate(rotation)
+
+        effected_faces = [x for x in self.faces if x not in self.non_effecting_rotations[fixed_face]]
+        counter = random.choice(["", "'"])
+        random_effecting_action = random.choice(effected_faces) + counter
+        solving_action = random_effecting_action + "'" if counter == "" else random_effecting_action
+
+        self.rotate(random_effecting_action)
+        state = copy.deepcopy(self.get_cube_state())
+
+        return state, solving_action
+
     @staticmethod
     def reward_face_solved(state, next_state):
         """
@@ -53,11 +83,7 @@ class CubeHelper(RubiksCube):
 
         return reward / 54
 
-    def check_solved(self):
-        state = np.array(self.get_cube_state())
-        return np.all(state == state[:, 0, 0][:, None, None], axis=(1, 2)).all()
-
-    def step(self, action, moves_since_scramble, scramble_length):
+    def step(self, action):
         """
         Rotate the cube and return the next state, reward and if the cube is solved
         """
@@ -65,54 +91,24 @@ class CubeHelper(RubiksCube):
         self.rotate(action)
 
         next_state = copy.deepcopy(self.get_cube_state())
-        reward = self.reward_action(state, next_state, moves_since_scramble, scramble_length)
+        reward = self.reward_action(state, next_state)
         done = self.check_solved()
 
         return next_state, reward, done
 
-    def reward_action(self, state, next_state, moves_since_scramble, scramble_length):
-        reward = (self.reward_color_count(next_state) - self.reward_color_count(state))
+    def reward_action(self, state, next_state):
+        reward = 10 * (self.reward_color_count(next_state) - self.reward_color_count(state))
 
-        # if reward < 0:
-        #     reward = 0
-
-        if self.reward_face_solved(state, next_state) != 0:
-            reward += self.reward_face_solved(state, next_state)/6
-            reward = max(reward, 1)
+        solved_face = self.reward_face_solved(state, next_state)
+        reward += solved_face
 
         if self.check_solved():
             print('Solved cube!')
-            reward = 1
+            reward += 3
 
-        move_penalty = 0.4 * (moves_since_scramble / scramble_length)
+        move_penalty = -0.05
 
-        return reward - move_penalty
-
-    def reset(self):
-        self.__init__()
-        return self.get_cube_state()
-
-    def excluded_face_scramble(self):
-        """
-        Scrambles all nodes on the cube except for one face that will stay the same.
-        :return: the face that was scrambled without one face except for 1 move on that face,
-                also the action that needs to be taken to solve that face
-        """
-        fixed_face = random.choice(self.faces)
-
-        for i in range(10):
-            rotation = random.choice(self.non_effecting_rotations[fixed_face])
-            self.rotate(rotation)
-
-        effected_faces = [x for x in self.faces if x not in self.non_effecting_rotations[fixed_face]]
-        counter = random.choice(["", "'"])
-        random_effecting_action = random.choice(effected_faces) + counter
-        solving_action = random_effecting_action + "'" if counter == "" else random_effecting_action
-
-        self.rotate(random_effecting_action)
-        state = copy.deepcopy(self.get_cube_state())
-
-        return state, solving_action
+        return reward + move_penalty
 
 
 if __name__ == "__main__":

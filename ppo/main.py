@@ -13,7 +13,10 @@ class Main:
         self.STEPS = 500
         self.BATCH_SIZE = 256
 
-        self.model_save_path = "../models/model.h5"
+        self.model_save_path = "../models/ppo/model.h5"
+
+        self.solved_count = 0
+        self.scramble_length = 2
 
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
                               6: "R", 7: "R'", 8: "F", 9: "F'", 10: "B", 11: "B'"}
@@ -25,9 +28,9 @@ class Main:
             self.agent.train(np.array(states), np.array(actions), np.array(rewards), np.array(next_states),
                              np.array(dones))
 
-            # if step % 10 == 0:
-            #     self.agent.actor.save(self.model_save_path + "_actor")
-            #     self.agent.critic.save(self.model_save_path + "_critic")
+            if step % 10 == 0:
+                self.agent.actor.save(self.model_save_path + "_actor")
+                self.agent.critic.save(self.model_save_path + "_critic")
 
             print("Total reward: ", sum(rewards))
 
@@ -35,25 +38,16 @@ class Main:
         self.agent.critic.save(self.model_save_path + "_critic")
 
     def get_train_data(self):
-        self.cube.scramble()
-        state = copy.deepcopy(self.cube.get_cube_state())
-        state = flatten_state(state)
-
+        self.cube.reset()
+        self.cube.scramble(self.scramble_length)
+        state = flatten_state(self.cube.get_cube_state())
         states, actions, rewards, next_states, dones = [], [], [], [], []
 
         for i in range(self.BATCH_SIZE):
-            if i % 50 == 0:
-                self.cube.reset()
-                _, action = self.cube.excluded_face_scramble()
-                next_state, reward, done = self.cube.step(action)
-                next_state = flatten_state(next_state)
-                self.cube.scramble()
-
-            else:
-                action = self.agent.get_action(np.expand_dims(state, axis=0))
-                string_rotation = self.rotation_dict[action]
-                next_state, reward, done = self.cube.step(string_rotation)
-                next_state = flatten_state(next_state)
+            action = self.agent.get_action(np.expand_dims(state, axis=0))
+            string_rotation = self.rotation_dict[action]
+            next_state, reward, done = self.cube.step(string_rotation)
+            next_state = flatten_state(next_state)
 
             states.append(state)
             actions.append(action)
@@ -61,11 +55,19 @@ class Main:
             next_states.append(next_state)
             dones.append(done)
 
+            state = flatten_state(next_state)
+
             if done:
-                self.cube.scramble()
-                state = copy.deepcopy(self.cube.get_cube_state())
-            else:
-                state = copy.deepcopy(next_state)
+                if self.solved_count >= 10:
+                    self.scramble_length += 1
+                    self.solved_count = 0
+                else:
+                    self.solved_count += 1
+
+            if i % self.scramble_length == 0 or done:
+                self.cube.reset()
+                self.cube.scramble(self.scramble_length)
+                state = flatten_state(self.cube.get_cube_state())
 
         return states, actions, rewards, next_states, dones
 
