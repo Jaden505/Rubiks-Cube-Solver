@@ -1,9 +1,6 @@
-import copy
-
 import replay_buffer as rb
 
 import numpy as np
-
 from keras.models import clone_model
 from keras.models import Model
 from keras.layers import *
@@ -28,7 +25,7 @@ class DqnAgent:
 
         # Temperature for Boltzmann exploration: higher temperature means more exploration
         self.temp = 1.0
-        self.temp_decay = 0.995
+        self.temp_decay = 0.992
         self.temp_min = 0.01
 
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",

@@ -2,7 +2,6 @@ from cube.helper_cube import CubeHelper
 from dqn.replay_buffer import ReplayBuffer
 from dqn.dqn_agent import DqnAgent
 
-from keras.models import load_model, clone_model
 import copy
 
 
@@ -12,10 +11,7 @@ class Main:
         self.buffer = ReplayBuffer()
         self.agent = DqnAgent()
 
-        self.model_save_path = '../models/dqn/model3_negative_rewards.h5'
-        # model = load_model(self.model_save_path)
-        # self.agent.model = model
-        # self.agent.target_model = clone_model(model)
+        self.model_save_path = '../models/dqn/model.h5'
 
         self.STEPS = 2000
         self.BATCH_SIZE = 96
@@ -24,7 +20,6 @@ class Main:
 
         self.solved_count = 0
         self.scramble_length = 2
-        self.moves_since_scramble = 0
 
     def train_model(self):
         for step in range(self.STEPS):
@@ -52,12 +47,10 @@ class Main:
         state = copy.deepcopy(self.cube.get_cube_state())
 
         for i in range(self.BATCH_SIZE):
-            self.moves_since_scramble += 1
-
             ohe_state = self.agent.one_hot_encode(state)
             action, q_state = self.agent.boltzmann_exploration(ohe_state, self.agent.model)
-            next_state, reward, done = self.cube.step(self.agent.rotation_dict[action],
-                                                      self.moves_since_scramble, self.scramble_length)
+            next_state, reward, done = self.cube.step(self.agent.rotation_dict[action])
+
             _, q_next_state = self.agent.boltzmann_exploration(self.agent.one_hot_encode(next_state),
                                                                self.agent.target_model)
             td_error = abs(reward + (0.99 * max(q_next_state)) - q_state[action])
@@ -70,6 +63,11 @@ class Main:
                 if self.solved_count >= 10:
                     self.scramble_length += 1
                     self.solved_count = 0
+                    self.agent.temp = 1
+                    if self.scramble_length > 5:
+                        self.agent.temp_decay = 1 - (self.scramble_length / 100)
+                    else:
+                        self.agent.temp_decay = 0.992
                 else:
                     self.solved_count += 1
 
@@ -77,7 +75,6 @@ class Main:
                 self.cube.reset()
                 self.cube.scramble(self.scramble_length)
                 state = copy.deepcopy(self.cube.get_cube_state())
-                self.moves_since_scramble = 0
 
 
 if __name__ == "__main__":

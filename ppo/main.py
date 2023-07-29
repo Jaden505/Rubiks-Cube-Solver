@@ -14,12 +14,12 @@ class Main:
         self.BATCH_SIZE = 64
 
         self.model_save_path = "../models/ppo/model.h5"
-        self.agent.actor = load_model(self.model_save_path + "_actor")
-        self.agent.critic = load_model(self.model_save_path + "_critic")
-        self.agent.epsilon = 0.5
+        # self.agent.actor = load_model(self.model_save_path + "_actor")
+        # self.agent.critic = load_model(self.model_save_path + "_critic")
+        # self.agent.epsilon = 0.5
 
         self.solved_count = 0
-        self.scramble_length = 7
+        self.scramble_length = 2
 
         self.rotation_dict = {0: "U", 1: "U'", 2: "D", 3: "D'", 4: "L", 5: "L'",
                               6: "R", 7: "R'", 8: "F", 9: "F'", 10: "B", 11: "B'"}
@@ -68,6 +68,11 @@ class Main:
                     self.scramble_length += 1
                     self.solved_count = 0
                     self.agent.epsilon = 1.0
+
+                    if self.scramble_length > 5:
+                        self.agent.epsilon_decay = 1 - (self.scramble_length / 100)
+                    else:
+                        self.agent.epsilon_decay = 0.992
                 else:
                     self.solved_count += 1
 

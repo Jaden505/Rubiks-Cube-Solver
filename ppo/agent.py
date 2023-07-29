@@ -6,7 +6,8 @@ from keras.initializers.initializers_v2 import GlorotUniform
 
 
 class PPOAgent:
-    def __init__(self, state_dim, action_dim, epsilon=1.0, epsilon_decay=0.995, epsilon_min=0.01, gamma=0.99, clip_ratio=0.15, learning_rate=3e-3):
+    def __init__(self, state_dim, action_dim, epsilon=1.0, epsilon_decay=0.992, epsilon_min=0.01,
+                 gamma=0.99, clip_ratio=0.15, learning_rate=3e-4):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -27,12 +28,12 @@ class PPOAgent:
         x = Dense(256, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
         x = Activation('elu')(x)
-        x = Dropout(0.3)(x)
+        x = Dropout(0.1)(x)
 
         x = Dense(128, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
         x = Activation('elu')(x)
-        x = Dropout(0.3)(x)
+        x = Dropout(0.1)(x)
 
         x = Dense(128, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
@@ -48,12 +49,12 @@ class PPOAgent:
         x = Dense(256, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
         x = Activation('elu')(x)
-        x = Dropout(0.2)(x)
+        x = Dropout(0.1)(x)
 
         x = Dense(128, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
         x = Activation('elu')(x)
-        x = Dropout(0.2)(x)
+        x = Dropout(0.1)(x)
 
         x = Dense(128, kernel_initializer=GlorotUniform())(x)
         x = BatchNormalization()(x)
@@ -68,10 +69,6 @@ class PPOAgent:
         else:  # exploitation
             probabilities = self.actor.predict(state, verbose=0)
             action = np.argmax(probabilities[0])
-
-        # decay epsilon
-        if self.epsilon > self.epsilon_min and self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
 
         return action
 
@@ -98,6 +95,9 @@ class PPOAgent:
 
         self.actor_optimizer.apply_gradients(zip(grads_actor, self.actor.trainable_variables))
         self.critic_optimizer.apply_gradients(zip(grads_critic, self.critic.trainable_variables))
+
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
 
     def get_gae(self, rewards, states, next_states, dones):
         """Calculate the Generalized Advantage Estimation (GAE)"""
